@@ -1,0 +1,52 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Node / React
+node_modules/
+dist/
+build/
+.vite/
+
+# Java / Spring Boot
+.gradle/
+out/
+target/
+*.class
+
+# Python / FastAPI
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Local files
+*.local
+
+# Claude Code 개인 가이드 비공개
+CLAUDE.md
+backend/CLAUDE.md
+
+# Google Cloud 인증 키
+ai-server/gcp-credentials.json
+ai-server/main.py
+ai-server/*.json
+.env
+ai-server/.env
+ai-server/venv/
+ai-server/__pycache__/
+ai-server/**/__pycache__/
+

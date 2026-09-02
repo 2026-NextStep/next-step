@@ -1,0 +1,365 @@
+/* ── 루트 ── */
+.cd-root {
+    min-height: 100vh;
+    background: #f7f8fa;
+    font-family: "Pretendard", "Noto Sans KR", sans-serif;
+    color: #1a1a1a;
+}
+
+/* ── 메인 ── */
+.cd-main {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
+}
+
+/* ── 브레드크럼 ── */
+.cd-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 20px;
+}
+
+.cd-breadcrumb-link {
+    cursor: pointer;
+    color: #555;
+    transition: color 0.15s;
+}
+
+.cd-breadcrumb-link:hover {
+    color: #0b79ff;
+}
+
+.cd-breadcrumb-sep {
+    color: #bbb;
+}
+
+/* ── 게시글 article ── */
+.cd-article {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 40px 48px;
+}
+
+/* ── 제목 ── */
+.cd-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: #111;
+    line-height: 1.4;
+    margin: 0 0 24px;
+    letter-spacing: -0.4px;
+}
+
+/* ── 메타 (작성자 + 날짜/조회) ── */
+.cd-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.cd-author-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cd-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #dbeafe;
+    color: #0b79ff;
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.cd-avatar--sm {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+}
+
+.cd-author-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #222;
+}
+
+.cd-author-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    background: #0b79ff;
+    color: #fff;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.cd-meta-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 13px;
+    color: #888;
+}
+
+.cd-date {
+    font-weight: 500;
+}
+
+.cd-views {
+    font-weight: 500;
+}
+
+/* ── 구분선 ── */
+.cd-divider {
+    border: none;
+    border-top: 1px solid #e9ecef;
+    margin: 24px 0;
+}
+
+/* ── 본문 ── */
+.cd-body {
+    font-size: 15px;
+    line-height: 1.85;
+    color: #333;
+    min-height: 160px;
+    margin-bottom: 8px;
+}
+
+.cd-body p {
+    margin: 0 0 4px;
+}
+
+/* ── 좋아요 / 공유 버튼 ── */
+.cd-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 28px 0;
+}
+
+.cd-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 28px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 24px;
+    background: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    color: #444;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.cd-action-btn:hover {
+    border-color: #0b79ff;
+    color: #0b79ff;
+}
+
+.cd-action-btn--liked {
+    border-color: #ef4444;
+    color: #ef4444;
+    background: #fff5f5;
+}
+
+/* ── 댓글 섹션 ── */
+.cd-comments {
+    padding-top: 4px;
+}
+
+.cd-comments-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #111;
+    margin: 0 0 20px;
+}
+
+/* ── 댓글 입력 ── */
+.cd-comment-input-wrap {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 28px;
+}
+
+.cd-comment-input-box {
+    flex: 1;
+    border: 1.5px solid #d1d5db;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+    transition: border-color 0.15s;
+}
+
+.cd-comment-input-box:focus-within {
+    border-color: #0b79ff;
+}
+
+.cd-comment-textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 14px 16px;
+    border: none;
+    outline: none;
+    resize: none;
+    font-size: 14px;
+    color: #333;
+    font-family: inherit;
+    line-height: 1.6;
+    box-sizing: border-box;
+}
+
+.cd-comment-input-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 8px 12px;
+    border-top: 1px solid #f1f5f9;
+    background: #fafafa;
+}
+
+.cd-comment-submit {
+    padding: 7px 20px;
+    background: #0b79ff;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.cd-comment-submit:hover {
+    background: #0b79ff;
+}
+
+/* ── 댓글 목록 ── */
+.cd-comment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.cd-comment-item {
+    border-top: 1px solid #f1f5f9;
+    padding: 20px 0 4px;
+}
+
+/* ── 댓글 행 ── */
+.cd-comment-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+/* ── 대댓글 행 ── */
+.cd-reply-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-top: 16px;
+    margin-left: 16px;
+    padding-left: 16px;
+    border-left: 2px solid #e2e8f0;
+}
+
+.cd-reply-arrow {
+    font-size: 16px;
+    color: #aaa;
+    flex-shrink: 0;
+    margin-top: 6px;
+}
+
+/* ── 댓글 콘텐츠 ── */
+.cd-comment-content {
+    flex: 1;
+}
+
+.cd-comment-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.cd-comment-author {
+    font-size: 14px;
+    font-weight: 700;
+    color: #222;
+}
+
+.cd-comment-time {
+    font-size: 12px;
+    color: #aaa;
+}
+
+.cd-comment-text {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #333;
+    margin: 0 0 10px;
+}
+
+/* ── 댓글 액션 ── */
+.cd-comment-actions {
+    display: flex;
+    gap: 12px;
+    padding-bottom: 8px;
+}
+
+.cd-comment-action-btn {
+    background: none;
+    border: none;
+    font-size: 12px;
+    font-weight: 600;
+    color: #888;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.15s;
+}
+
+.cd-comment-action-btn:hover {
+    color: #333;
+}
+
+.cd-comment-action-btn--danger:hover {
+    color: #ef4444;
+}
+
+/* ── 404 ── */
+.cd-not-found {
+    text-align: center;
+    color: #888;
+    font-size: 16px;
+    margin-top: 80px;
+}
+
+/* ── 반응형 ── */
+@media (max-width: 768px) {
+    .cd-article {
+        padding: 24px 20px;
+    }
+
+    .cd-title {
+        font-size: 20px;
+    }
+
+    .cd-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+}

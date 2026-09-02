@@ -1,0 +1,327 @@
+/* ── Wrapper ── */
+.det-wrap {
+  padding: 20px 0 80px;
+}
+
+/* ── Breadcrumb ── */
+.det-bc {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #9ca3af;
+  margin-bottom: 20px;
+}
+.det-bc-sep { color: #d1d5db; }
+.det-bc-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+  color: #9ca3af;
+  cursor: pointer;
+}
+.det-bc-btn:hover { color: #3b82f6; text-decoration: underline; }
+
+/* ── Title area ── */
+.det-company {
+  font-size: 13px;
+  font-weight: 600;
+  color: #3b82f6;
+  margin: 0 0 8px;
+}
+.det-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.35;
+  margin: 0 0 14px;
+}
+.det-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 32px;
+}
+.det-tag {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+}
+.det-tag-status {
+  background: #eff6ff;
+  color: #3b82f6;
+  border-color: #bfdbfe;
+}
+
+/* ── Two-column layout ── */
+.det-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+}
+
+/* ── Left main ── */
+.det-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+/* ── Section ── */
+.det-section {}
+
+.det-sec-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.det-sec-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.det-hr {
+  border: none;
+  border-top: 1.5px solid #e5e7eb;
+  margin: 0 0 20px;
+}
+
+/* AI button */
+.det-ai-btn {
+  height: 30px;
+  padding: 0 14px;
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.det-ai-btn:hover { background: #2563eb; }
+
+/* ── 기본 정보 table ── */
+.det-info-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #e5e7eb;
+  font-size: 13px;
+  table-layout: fixed;
+}
+.det-info-tbl tr {
+  border-bottom: 1px solid #e5e7eb;
+}
+.det-info-tbl tr:last-child { border-bottom: none; }
+.det-info-tbl th {
+  background: #f9fafb;
+  padding: 13px 16px;
+  font-weight: 400;
+  color: #9ca3af;
+  text-align: left;
+  width: 13%;
+  border-right: 1px solid #e5e7eb;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.det-info-tbl td {
+  padding: 13px 16px;
+  color: #1f2937;
+  font-size: 13px;
+  width: 37%;
+  border-right: 1px solid #e5e7eb;
+  vertical-align: middle;
+}
+.det-info-tbl td:last-child { border-right: none; }
+.det-val-bold { font-weight: 700; color: #111827; }
+
+/* ── 모집분야 table ── */
+.det-field-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #e5e7eb;
+  font-size: 13px;
+  table-layout: fixed;
+}
+.det-field-tbl th:nth-child(1) { width: 15%; }
+.det-field-tbl th:nth-child(2) { width: 55%; }
+.det-field-tbl th:nth-child(3) { width: 15%; }
+.det-field-tbl th:nth-child(4) { width: 15%; }
+.det-field-tbl thead tr {
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+.det-field-tbl th {
+  padding: 10px 14px;
+  font-weight: 600;
+  color: #6b7280;
+  font-size: 12px;
+  text-align: left;
+  border-right: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+.det-field-tbl th:last-child { border-right: none; }
+.det-field-tbl td {
+  padding: 14px 14px;
+  color: #374151;
+  border-bottom: 1px solid #f0f0f0;
+  border-right: 1px solid #e5e7eb;
+  vertical-align: top;
+  line-height: 1.55;
+}
+.det-field-tbl td:last-child { border-right: none; }
+.det-field-tbl tbody tr:last-child td { border-bottom: none; }
+
+.det-fa { font-weight: 600; color: #111827; white-space: pre-wrap; width: 110px; }
+.det-fd { color: #6b7280; }
+.det-fc { white-space: nowrap; text-align: center; width: 72px; }
+.det-fl { white-space: nowrap; color: #6b7280; width: 100px; }
+
+/* ── 지원 자격 ── */
+.det-qual-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.det-qual-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13.5px;
+  color: #374151;
+  line-height: 1.65;
+}
+.det-qual-icon { flex-shrink: 0; margin-top: 2px; }
+.det-ql {
+  font-weight: 600;
+  color: #111827;
+  margin-right: 6px;
+}
+
+/* ── 전형 절차 ── */
+.det-process-raw {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px 20px;
+  font-size: 13px;
+  line-height: 1.8;
+  color: #374151;
+  white-space: pre-wrap;
+}
+
+/* ── Sidebar ── */
+.det-sidebar {
+  width: 210px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 76px;
+}
+.det-sidebar-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* D-Day */
+.det-dday-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.det-dday {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 4px;
+  background: #fef3c7;
+  color: #d97706;
+  font-size: 13px;
+  font-weight: 700;
+}
+.det-dday-red {
+  background: #fee2e2;
+  color: #dc2626;
+}
+.det-dday-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+}
+.det-period {
+  font-size: 12px;
+  color: #9ca3af;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Homepage button */
+.det-hp-btn {
+  width: 100%;
+  height: 40px;
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.det-hp-btn:hover { background: #2563eb; }
+
+.det-side-hr {
+  border: none;
+  border-top: 1px solid #f3f4f6;
+  margin: 0;
+}
+
+/* Scrap row */
+.det-scrap-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.det-scrap-icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.det-scrap-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.det-scrap-text {
+  font-size: 12px;
+  color: #6b7280;
+}
+.det-scrap-count {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+}
