@@ -15,6 +15,13 @@ function shortLoc(loc) {
   return `${parts[0]},${parts[1]} 외 ${parts.length - 2}`
 }
 
+function shortField(field) {
+  if (!field) return '-'
+  const parts = field.split(',')
+  if (parts.length <= 3) return field
+  return `${parts.slice(0, 3).join(',')}...`
+}
+
 export default function JobListPage() {
   const [searchText, setSearchText]         = useState('')
   const [appliedSearch, setAppliedSearch]   = useState('')
@@ -91,7 +98,10 @@ export default function JobListPage() {
       })
       if (!res.ok) throw new Error()
       const data = await res.json()
-      setJobs(prev => prev.map(j => j.id === id ? { ...j, bookmarked: data.bookmarked } : j))
+      setJobs(prev => prev.map(j => j.id === id
+        ? { ...j, bookmarked: data.bookmarked, views: Math.max(0, (j.views || 0) + (data.bookmarked ? 1 : -1)) }
+        : j
+      ))
     } catch {
       alert('북마크 처리 중 오류가 발생했습니다.')
     }
@@ -205,7 +215,7 @@ export default function JobListPage() {
                           <div className="job-meta">{job.employmentType || '-'} · {shortLoc(job.workLocation)}</div>
                         </td>
                         <td className="org-cell">{job.org}</td>
-                        <td className="field-cell">{shortLoc(job.field)}</td>
+                        <td className="field-cell">{shortField(job.field)}</td>
                         <td className="date-cell">{job.start} ~<br />{job.end}</td>
                         <td className="views-cell">{(job.views || 0).toLocaleString()}</td>
                         <td>

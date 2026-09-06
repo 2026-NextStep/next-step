@@ -44,7 +44,7 @@ public class JobPostingService {
                                        Long memberId) {
         Sort sortOrder = switch (sort) {
             case "마감일순" -> Sort.by(Sort.Direction.ASC, "endDate");
-            case "조회수순" -> Sort.by(Sort.Direction.DESC, "scrapCount");
+            case "조회수순" -> Sort.by(Sort.Direction.DESC, "viewCount");
             default        -> Sort.by(Sort.Direction.DESC, "createdAt");
         };
 
