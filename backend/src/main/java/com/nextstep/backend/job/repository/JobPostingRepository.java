@@ -19,6 +19,16 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Long>, J
 
     @Modifying
     @Transactional
+    @Query("UPDATE JobPosting j SET j.scrapCount = j.scrapCount + 1 WHERE j.postingId = :id")
+    void incrementScrapCount(@Param("id") Long id);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE JobPosting j SET j.scrapCount = CASE WHEN j.scrapCount > 0 THEN j.scrapCount - 1 ELSE 0 END WHERE j.postingId = :id")
+    void decrementScrapCount(@Param("id") Long id);
+
+    @Modifying
+    @Transactional
     @Query("UPDATE JobPosting j SET j.status = :status WHERE j.postingId = :id")
     void updateStatus(@Param("id") Long id, @Param("status") String status);
 

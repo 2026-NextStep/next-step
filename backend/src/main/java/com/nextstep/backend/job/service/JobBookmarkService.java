@@ -26,9 +26,11 @@ public class JobBookmarkService {
     public Map<String, Object> toggle(Long memberId, Long postingId) {
         if (bookmarkRepository.existsByMemberIdAndPostingId(memberId, postingId)) {
             bookmarkRepository.deleteByMemberIdAndPostingId(memberId, postingId);
+            jobPostingRepository.decrementScrapCount(postingId);
             return Map.of("bookmarked", false);
         } else {
             bookmarkRepository.save(new JobBookmark(memberId, postingId));
+            jobPostingRepository.incrementScrapCount(postingId);
             return Map.of("bookmarked", true);
         }
     }
