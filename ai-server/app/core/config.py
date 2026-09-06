@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class Settings:
     openai_api_key: str = field(default_factory=lambda: os.getenv("OPENAI_API_KEY", ""))
+    gemini_api_key: str = field(default_factory=lambda: os.getenv("GEMINI_API_KEY", ""))
     gcp_project_id: str = field(default_factory=lambda: os.getenv("GCP_PROJECT_ID", ""))
     gcp_location: str = field(default_factory=lambda: os.getenv("GCP_LOCATION", "us"))
     gcp_processor_id: str = field(default_factory=lambda: os.getenv("GCP_PROCESSOR_ID", ""))

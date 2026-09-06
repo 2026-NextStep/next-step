@@ -3,7 +3,8 @@ import logging
 
 import pymysql
 from fastapi import APIRouter
-from openai import OpenAI
+from google import genai
+from google.genai import types
 from tavily import TavilyClient
 
 from app.core.config import settings
@@ -11,7 +12,9 @@ from app.core.config import settings
 router = APIRouter(prefix="/api/latest-info", tags=["latest-info"])
 logger = logging.getLogger(__name__)
 
-openai_client = OpenAI(api_key=settings.openai_api_key)
+GEMINI_MODEL = "gemini-3.6-flash"
+
+gemini_client = genai.Client(api_key=settings.gemini_api_key)
 tavily_client = TavilyClient(api_key=settings.tavily_api_key)
 
 SYSTEM_PROMPT = """당신은 구직자를 위한 취업 시장 분석 전문가입니다.
@@ -125,16 +128,16 @@ async def fetch_and_save():
                 title=article.get("title", ""),
                 content=content,
             )
-            response = openai_client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": prompt},
-                ],
-                response_format={"type": "json_object"},
-                temperature=0.4,
+            response = gemini_client.models.generate_content(
+                model=GEMINI_MODEL,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=SYSTEM_PROMPT,
+                    response_mime_type="application/json",
+                    temperature=0.4,
+                ),
             )
-            data = json.loads(response.choices[0].message.content)
+            data = json.loads(response.text)
             save_to_db(data)
             saved += 1
             logger.info(f"Saved: {data.get('title', '')}")

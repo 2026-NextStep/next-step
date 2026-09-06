@@ -2,14 +2,17 @@ import json
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
-from openai import OpenAI
+from google import genai
+from google.genai import types
 from pydantic import BaseModel
 
 from app.core.config import settings
 
 router = APIRouter(prefix="/api/job", tags=["job"])
 
-client = OpenAI(api_key=settings.openai_api_key)
+GEMINI_MODEL = "gemini-3.6-flash"
+
+client = genai.Client(api_key=settings.gemini_api_key)
 
 SYSTEM_PROMPT = """당신은 공공기관 채용 공고 분석 전문가입니다.
 채용 공고 데이터를 분석하여 구직자에게 유용한 정보를 정확한 JSON 형식으로만 반환합니다.
@@ -88,15 +91,15 @@ async def analyze_job(req: JobAnalysisRequest):
     )
 
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": prompt},
-            ],
-            response_format={"type": "json_object"},
-            temperature=0.3,
+        response = client.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=SYSTEM_PROMPT,
+                response_mime_type="application/json",
+                temperature=0.3,
+            ),
         )
-        return json.loads(response.choices[0].message.content)
+        return json.loads(response.text)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
