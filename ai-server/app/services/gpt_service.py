@@ -1,10 +1,14 @@
 import json
 import logging
 import re
+from typing import Literal
 
-from openai import AsyncOpenAI
+from google import genai
+from google.genai import errors, types
+from pydantic import BaseModel, Field
 
 from app.core.config import settings
+from app.schemas.analysis import BasicInfoSchema, KeyClause, PrecautionSchema, Risk, SalaryBreakdownSchema
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +16,21 @@ MAX_OCR_CHARS = 3500
 
 _HANGUL = re.compile(r'[가-힣]')
 _ALPHA  = re.compile(r'[A-Za-z]')
+
+
+class _ContractAnalysis(BaseModel):
+    """Gemini 구조화 출력용 내부 모델. 외부 API 응답 형식에는 노출하지 않는다."""
+
+    summary: str
+    risk_level: Literal["LOW", "MEDIUM", "HIGH"]
+    risk_score: int = Field(ge=0, le=100)
+    basic_info: BasicInfoSchema | None = None
+    salary_breakdown: SalaryBreakdownSchema | None = None
+    key_clauses: list[KeyClause] = Field(default_factory=list, max_length=3)
+    risks: list[Risk] = Field(default_factory=list, max_length=3)
+    precautions: list[PrecautionSchema] = Field(default_factory=list, max_length=3)
+    questions_for_recruiter: list[str] = Field(default_factory=list, max_length=3)
+    recommendations: list[str] = Field(default_factory=list, max_length=3)
 
 
 def _strip_english_lines(text: str) -> str:
@@ -75,38 +94,20 @@ HIGH 조항이 많을수록 100에 가깝게, MEDIUM만 소수면 40에 가깝�
 ⚠️ HIGH 기준에 해당하면 보수적으로 "중"으로 낮추지 말 것. "법 위반 소지가 있다"고 판단되면 HIGH다.
 
 일반 규칙:
-- JSON 스키마로만 응답. 추가 텍스트·마크다운·코드 블록 금지.
 - 모르는 정보는 null (추측 금지).
 - description/reason은 2문장 이내로 간결하게.
 - key_clauses, risks, precautions, questions_for_recruiter 각 최대 3개.
-
-[JSON 스키마]
-{
-  "summary": "계약서 요약 (100자)",
-  "risk_level": "LOW|MEDIUM|HIGH",
-  "risk_score": 0~100,
-  "basic_info": {
-    "company_name": "사업체명·회사명 (사람 이름 절대 금지, 없으면 null)",
-    "employer_name": "사업주·대표이사 성명 (사람 이름, 사업체명 절대 금지, 없으면 null)",
-    "work_period": null, "job_description": null, "work_hours": null,
-    "probation_period": "수습기간 (계약서에 없으면 반드시 '없음' 문자열로, null 금지)",
-    "employer_address": null, "employer_contact": null, "employee_name": null, "work_location": null
-  },
-  "salary_breakdown": {
-    "gross_salary": 세전월급정수(원문에서 추출. 연봉만 있으면 ÷12. 시급제면 ×209. 불확실하면 null, 절대 0 금지),
-    "note": "추출 근거 한 줄 (예: '월 기본급 3,500,000원 명시')"
-  },
-  "※ salary_breakdown은 gross_salary와 note 두 필드만 반환. 4대보험·소득세·실수령액 계산은 백엔드 처리이므로 GPT가 계산하지 말 것."
-  "key_clauses": [{"title": "", "content": "(2문장)", "importance": "HIGH|MEDIUM|LOW"}],
-  "risks": [{"type": "", "description": "(2문장)", "reason": "(2문장)", "recommendation": "(1문장)", "severity": "HIGH|MEDIUM|LOW", "clause_reference": null}],
-  "precautions": [{"title": "", "description": "(2문장)"}],
-  "questions_for_recruiter": ["질문 1문장"],
-  "recommendations": ["권고 1문장"]
-}"""
+- summary는 100자 이내로 작성할 것.
+- basic_info.company_name에는 사업체명·회사명만, employer_name에는 사업주·대표이사 성명만 적을 것.
+- 계약서에 수습기간이 없으면 probation_period는 null 대신 반드시 "없음"으로 적을 것.
+- salary_breakdown에는 원문에서 확인한 세전 월급 gross_salary와 추출 근거 note만 작성할 것.
+- 연봉만 있으면 12로 나누고 시급제면 209를 곱하되, 불확실하면 gross_salary는 null로 둘 것.
+- 4대보험·소득세·실수령액은 Spring Boot가 계산하므로 모델이 직접 계산하지 말 것."""
 
 
 async def analyze_contract(ocr_text: str) -> dict:
-    client = AsyncOpenAI(api_key=settings.openai_api_key)
+    if not settings.gemini_api_key:
+        raise RuntimeError("GEMINI_API_KEY가 설정되지 않았습니다")
 
     original_len = len(ocr_text)
     ocr_text = _strip_english_lines(ocr_text)
@@ -121,32 +122,52 @@ async def analyze_contract(ocr_text: str) -> dict:
         truncated = ocr_text
         logger.info("OCR 텍스트 %d자 (한도 내, 자르지 않음)", stripped_len)
 
+    user_prompt = (
+        "아래 계약서에 실제로 적혀있는 내용만 분석하세요. 원문에 없는 위험을 만들지 말고, "
+        "위험 항목이 적으면 risks 배열을 1~2개만 만들거나 비워도 됩니다. 각 risks 항목의 "
+        "severity와 전체 risk_level은 시스템 지침의 분류 및 집계 규칙을 그대로 적용하세요.\n\n"
+        f"{truncated}"
+    )
+
     try:
-        response = await client.chat.completions.create(
-            model="gpt-4o-mini",
-            response_format={"type": "json_object"},
-            temperature=0.3,
-            messages=[
-                {"role": "system", "content": _SYSTEM_PROMPT},
-                {"role": "user", "content": f"아래 계약서에 실제로 적혀있는 내용만 분석하세요. 원문에 없는 위험을 만들지 말고, 위험 항목이 적으면 risks 배열을 짧게(1~2개) 만들거나 비워도 됩니다.\n각 risks 항목의 severity와 overall risk_level은 시스템 프롬프트의 [위험도 분류 기준]과 [전체 위험도 집계 규칙]을 그대로 적용하세요. HIGH 기준(최저임금 미달, 전액 손해배상, 자의적 해고, 4대 보험 미가입, 과도한 경업금지 등)에 해당하는 조항이 있으면 반드시 severity='HIGH'로 표시하고 overall risk_level도 'HIGH'로 표시하세요.\n\n{truncated}"},
-            ],
-            max_tokens=1200,
-        )
-        raw = response.choices[0].message.content
-        usage = response.usage
-        logger.info(
-            "GPT 토큰 사용 — 입력: %d, 출력: %d, 합계: %d",
-            usage.prompt_tokens, usage.completion_tokens, usage.total_tokens,
-        )
+        async with genai.Client(api_key=settings.gemini_api_key).aio as client:
+            response = await client.models.generate_content(
+                model=settings.gemini_model,
+                contents=user_prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=_SYSTEM_PROMPT,
+                    max_output_tokens=2400,
+                    thinking_config=types.ThinkingConfig(thinking_level="low"),
+                    response_mime_type="application/json",
+                    response_schema=_ContractAnalysis,
+                ),
+            )
 
+        raw = response.text
         if not raw:
-            raise RuntimeError("GPT 응답이 비어있습니다")
+            raise RuntimeError("Gemini 응답이 비어있습니다")
 
-        return json.loads(raw)
+        usage = response.usage_metadata
+        if usage:
+            logger.info(
+                "Gemini 토큰 사용 — 입력: %s, 출력: %s, 합계: %s",
+                usage.prompt_token_count,
+                usage.candidates_token_count,
+                usage.total_token_count,
+            )
+
+        parsed = json.loads(raw)
+        if not isinstance(parsed, dict):
+            raise RuntimeError("Gemini 응답 JSON이 객체 형식이 아닙니다")
+        return parsed
     except json.JSONDecodeError as e:
-        logger.error("GPT 응답 JSON 파싱 실패. raw=%s", raw[:500] if raw else "None")
-        raise RuntimeError(f"GPT 응답 JSON 파싱 실패: {e}") from e
+        logger.error("Gemini 응답 JSON 파싱 실패. raw=%s", raw[:500] if raw else "None")
+        raise RuntimeError("Gemini 응답 JSON 파싱에 실패했습니다") from e
     except RuntimeError:
         raise
+    except errors.APIError as e:
+        logger.error("Gemini API 호출 실패 — code=%s", getattr(e, "code", "unknown"))
+        raise RuntimeError("Gemini API 호출에 실패했습니다") from e
     except Exception as e:
-        raise RuntimeError(f"GPT 분석 실패: {e}") from e
+        logger.exception("Gemini 계약서 분석 중 예상하지 못한 오류")
+        raise RuntimeError("Gemini 계약서 분석 중 오류가 발생했습니다") from e

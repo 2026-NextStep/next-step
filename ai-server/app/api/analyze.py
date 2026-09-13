@@ -44,11 +44,11 @@ async def analyze_contract(file: UploadFile = File(...)) -> AnalyzeResponse:
         logger.info("[1/2] OCR 완료 — %d자 추출", len(ocr_text))
         logger.info("OCR 미리보기 (앞 100자): %s", ocr_text[:100])
 
-        # Step 2: GPT 분석
-        logger.info("[2/2] GPT 분석 호출 중...")
+        # Step 2: Gemini 분석
+        logger.info("[2/2] Gemini 분석 호출 중...")
         analysis = await gpt_service.analyze_contract(ocr_text)
         logger.info(
-            "[2/2] GPT 분석 완료 — risk_level: %s, risk_score: %s",
+            "[2/2] Gemini 분석 완료 — risk_level: %s, risk_score: %s",
             analysis.get("risk_level"),
             analysis.get("risk_score"),
         )
