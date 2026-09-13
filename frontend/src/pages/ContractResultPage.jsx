@@ -75,6 +75,8 @@ export default function ContractResultPage() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
+  const [loadError, setLoadError] = useState(null)
+  const [retryCount, setRetryCount] = useState(0)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showLeaveModal, setShowLeaveModal] = useState(false)
   const [pendingAction, setPendingAction] = useState(null)
@@ -88,8 +90,11 @@ export default function ContractResultPage() {
   useEffect(() => {
     if (!id) return
     const controller = new AbortController()
+    // URL의 계약서 ID가 바뀌면 조회 상태를 초기화합니다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true)
     setNotFound(false)
+    setLoadError(null)
     getContractAnalysis(id, controller.signal)
       .then((response) => {
         setData(response)
@@ -97,11 +102,18 @@ export default function ContractResultPage() {
       })
       .catch((error) => {
         if (error.name === 'CanceledError' || error.name === 'AbortError') return
-        setNotFound(true)
+        if (error.response?.status === 404) {
+          setNotFound(true)
+        } else {
+          setLoadError(
+            error.response?.data?.message
+              || '분석 서버에 연결하지 못했습니다. 잠시 후 다시 시도해주세요.',
+          )
+        }
         setLoading(false)
       })
     return () => controller.abort()
-  }, [id])
+  }, [id, retryCount])
 
   useEffect(() => {
     if (!shouldWarnBeforeLeave) return
@@ -122,6 +134,8 @@ export default function ContractResultPage() {
 
   useEffect(() => {
     if (blocker.state === 'blocked') {
+      // 라우터 차단 상태를 확인 모달 상태와 동기화합니다.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPendingAction('navigate')
       setShowLeaveModal(true)
     }
@@ -200,6 +214,35 @@ export default function ContractResultPage() {
     )
   }
 
+  /* ── 분석 실패 ── */
+  if (loadError) {
+    return (
+      <div className="flex min-h-[calc(100vh-60px)] items-center justify-center bg-gray-50 px-4">
+        <div className="w-full max-w-md rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 text-xl font-bold text-amber-500" aria-hidden="true">!</div>
+          <h1 className="text-lg font-bold text-gray-900">분석 결과를 불러오지 못했습니다</h1>
+          <p className="mt-2 text-sm leading-relaxed text-gray-500">{loadError}</p>
+          <div className="mt-6 flex flex-col justify-center gap-2 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => setRetryCount((count) => count + 1)}
+              className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+            >
+              다시 시도
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/contract/upload')}
+              className="rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50"
+            >
+              업로드 화면으로
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   /* ── Not Found ── */
   if (notFound || !data) {
     return (
@@ -234,7 +277,7 @@ export default function ContractResultPage() {
       <div className="max-w-[980px] mx-auto px-4 py-6">
 
         {/* ── 액션 바 ─────────────────────────────── */}
-        <div className="flex items-center justify-between mb-6 print:hidden">
+        <div className="mb-6 flex flex-col gap-3 print:hidden sm:flex-row sm:items-center sm:justify-between">
           <button
             type="button"
             onClick={() => navigate(-1)}
@@ -245,7 +288,7 @@ export default function ContractResultPage() {
               <polyline points="15 18 9 12 15 6" />
             </svg>
           </button>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             <button
               type="button"
               onClick={handleReupload}
@@ -266,7 +309,7 @@ export default function ContractResultPage() {
         </div>
 
         {/* ── 2단 그리드 ──────────────────────────── */}
-        <div className="grid grid-cols-[1fr_340px] gap-5 items-start print:grid-cols-1 print:gap-4">
+        <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[1fr_340px] print:grid-cols-1 print:gap-4">
 
           {/* ════ 좌측 메인 ══════════════════════════ */}
           <div className="space-y-5">
