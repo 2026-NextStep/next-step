@@ -1,16 +1,45 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ArrowLeft, Pencil, Plus, Trash2, Wrench } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { INITIAL_SKILLS, PROFICIENCY_OPTIONS } from '../mocks/careerProfile'
+import {
+  PROFICIENCY_LABELS,
+  PROFICIENCY_VALUES,
+  createSkill,
+  deleteSkill,
+  getSkills,
+  updateSkill,
+} from '../api/career'
 
+const PROFICIENCY_OPTIONS = Object.values(PROFICIENCY_LABELS)
 const EMPTY_FORM = { name: '', proficiency: '초급' }
 
 export default function SkillManagementPage() {
   const navigate = useNavigate()
-  const [skills, setSkills] = useState(() => INITIAL_SKILLS.map((skill) => ({ ...skill })))
+  const [skills, setSkills] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
   const [form, setForm] = useState(EMPTY_FORM)
   const [editingId, setEditingId] = useState(null)
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [deletingId, setDeletingId] = useState(null)
+
+  const loadSkills = async () => {
+    try {
+      setIsLoading(true)
+      const data = await getSkills()
+      setSkills(data)
+      setError('')
+    } catch {
+      setError('역량 목록을 불러오지 못했습니다.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadSkills()
+  }, [])
 
   const openCreateForm = () => {
     setEditingId(null)
@@ -20,7 +49,7 @@ export default function SkillManagementPage() {
 
   const openEditForm = (skill) => {
     setEditingId(skill.id)
-    setForm({ name: skill.name, proficiency: skill.proficiency })
+    setForm({ name: skill.name, proficiency: PROFICIENCY_LABELS[skill.proficiency] })
     setIsFormOpen(true)
   }
 
@@ -30,19 +59,40 @@ export default function SkillManagementPage() {
     setForm(EMPTY_FORM)
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
+    if (isSubmitting) return
     const name = form.name.trim()
     if (!name) return
 
-    if (editingId !== null) {
-      setSkills((current) => current.map((skill) => (
-        skill.id === editingId ? { ...skill, name, proficiency: form.proficiency } : skill
-      )))
-    } else {
-      setSkills((current) => [...current, { id: Date.now(), name, proficiency: form.proficiency }])
+    const payload = { name, proficiency: PROFICIENCY_VALUES[form.proficiency] }
+    setIsSubmitting(true)
+    try {
+      if (editingId !== null) {
+        await updateSkill(editingId, payload)
+      } else {
+        await createSkill(payload)
+      }
+      await loadSkills()
+      closeForm()
+    } catch {
+      setError('역량 저장에 실패했습니다.')
+    } finally {
+      setIsSubmitting(false)
     }
-    closeForm()
+  }
+
+  const handleDelete = async (skill) => {
+    if (deletingId !== null) return
+    setDeletingId(skill.id)
+    try {
+      await deleteSkill(skill.id)
+      await loadSkills()
+    } catch {
+      setError('역량 삭제에 실패했습니다.')
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   return (
@@ -71,8 +121,12 @@ export default function SkillManagementPage() {
             </button>
           </div>
 
+          {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
+
           <div className="mt-7">
-            {skills.length === 0 ? (
+            {isLoading ? (
+              <p className="py-14 text-center text-sm text-gray-400">불러오는 중입니다...</p>
+            ) : skills.length === 0 ? (
               <div className="rounded-xl border border-dashed border-gray-200 py-14 text-center">
                 <Wrench className="mx-auto text-gray-300" size={36} />
                 <p className="mt-3 text-sm font-medium text-gray-600">등록된 역량이 없습니다.</p>
@@ -88,14 +142,20 @@ export default function SkillManagementPage() {
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-gray-900">{skill.name}</p>
                       <span className="mt-1 inline-block rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-600">
-                        {skill.proficiency}
+                        {PROFICIENCY_LABELS[skill.proficiency]}
                       </span>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
                       <button type="button" onClick={() => openEditForm(skill)} className="rounded-lg p-2 text-gray-400 hover:bg-gray-50 hover:text-blue-600" aria-label={`${skill.name} 수정`}>
                         <Pencil size={16} />
                       </button>
-                      <button type="button" onClick={() => setSkills((current) => current.filter((item) => item.id !== skill.id))} className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-500" aria-label={`${skill.name} 삭제`}>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(skill)}
+                        disabled={deletingId !== null}
+                        className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+                        aria-label={`${skill.name} 삭제`}
+                      >
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -104,8 +164,6 @@ export default function SkillManagementPage() {
               </div>
             )}
           </div>
-
-          <p className="mt-5 text-xs text-gray-400">현재 화면에서 변경한 내용은 새로고침하면 초기화됩니다. 저장 API는 추후 연결 예정입니다.</p>
         </section>
       </main>
 
@@ -137,7 +195,7 @@ export default function SkillManagementPage() {
             </div>
             <div className="mt-6 flex justify-end gap-2">
               <button type="button" onClick={closeForm} className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">취소</button>
-              <button type="submit" disabled={!form.name.trim()} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300">저장</button>
+              <button type="submit" disabled={isSubmitting || !form.name.trim()} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300">저장</button>
             </div>
           </form>
         </div>

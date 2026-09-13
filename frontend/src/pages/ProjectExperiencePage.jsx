@@ -1,16 +1,42 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ArrowLeft, FolderKanban, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { INITIAL_PROJECTS } from '../mocks/careerProfile'
+import {
+  createProject,
+  deleteProject,
+  getProjects,
+  updateProject,
+} from '../api/career'
 
 const EMPTY_FORM = { name: '', role: '', technologies: '', description: '' }
 
 export default function ProjectExperiencePage() {
   const navigate = useNavigate()
-  const [projects, setProjects] = useState(() => INITIAL_PROJECTS.map((project) => ({ ...project })))
+  const [projects, setProjects] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
   const [form, setForm] = useState(EMPTY_FORM)
   const [editingId, setEditingId] = useState(null)
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [deletingId, setDeletingId] = useState(null)
+
+  const loadProjects = async () => {
+    try {
+      setIsLoading(true)
+      const data = await getProjects()
+      setProjects(data)
+      setError('')
+    } catch {
+      setError('프로젝트 목록을 불러오지 못했습니다.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadProjects()
+  }, [])
 
   const openCreateForm = () => {
     setEditingId(null)
@@ -22,9 +48,9 @@ export default function ProjectExperiencePage() {
     setEditingId(project.id)
     setForm({
       name: project.name,
-      role: project.role,
-      technologies: project.technologies,
-      description: project.description,
+      role: project.role ?? '',
+      technologies: project.technologies ?? '',
+      description: project.description ?? '',
     })
     setIsFormOpen(true)
   }
@@ -37,24 +63,44 @@ export default function ProjectExperiencePage() {
 
   const updateField = (field, value) => setForm((current) => ({ ...current, [field]: value }))
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
-    const nextProject = {
+    if (isSubmitting) return
+    const payload = {
       name: form.name.trim(),
       role: form.role.trim(),
       technologies: form.technologies.trim(),
       description: form.description.trim(),
     }
-    if (!nextProject.name) return
+    if (!payload.name) return
 
-    if (editingId !== null) {
-      setProjects((current) => current.map((project) => (
-        project.id === editingId ? { ...project, ...nextProject } : project
-      )))
-    } else {
-      setProjects((current) => [...current, { id: Date.now(), ...nextProject }])
+    setIsSubmitting(true)
+    try {
+      if (editingId !== null) {
+        await updateProject(editingId, payload)
+      } else {
+        await createProject(payload)
+      }
+      await loadProjects()
+      closeForm()
+    } catch {
+      setError('프로젝트 경험 저장에 실패했습니다.')
+    } finally {
+      setIsSubmitting(false)
     }
-    closeForm()
+  }
+
+  const handleDelete = async (project) => {
+    if (deletingId !== null) return
+    setDeletingId(project.id)
+    try {
+      await deleteProject(project.id)
+      await loadProjects()
+    } catch {
+      setError('프로젝트 경험 삭제에 실패했습니다.')
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   return (
@@ -75,8 +121,12 @@ export default function ProjectExperiencePage() {
             </button>
           </div>
 
+          {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
+
           <div className="mt-7">
-            {projects.length === 0 ? (
+            {isLoading ? (
+              <p className="py-14 text-center text-sm text-gray-400">불러오는 중입니다...</p>
+            ) : projects.length === 0 ? (
               <div className="rounded-xl border border-dashed border-gray-200 py-14 text-center">
                 <FolderKanban className="mx-auto text-gray-300" size={38} />
                 <p className="mt-3 text-sm font-medium text-gray-600">등록된 프로젝트 경험이 없습니다.</p>
@@ -94,7 +144,15 @@ export default function ProjectExperiencePage() {
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
                         <button type="button" onClick={() => openEditForm(project)} className="rounded-lg p-2 text-gray-400 hover:bg-gray-50 hover:text-blue-600" aria-label={`${project.name} 수정`}><Pencil size={16} /></button>
-                        <button type="button" onClick={() => setProjects((current) => current.filter((item) => item.id !== project.id))} className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-500" aria-label={`${project.name} 삭제`}><Trash2 size={16} /></button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(project)}
+                          disabled={deletingId !== null}
+                          className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+                          aria-label={`${project.name} 삭제`}
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
                     </div>
                     <div className="mt-4 flex flex-wrap gap-2">
@@ -108,7 +166,6 @@ export default function ProjectExperiencePage() {
               </div>
             )}
           </div>
-          <p className="mt-5 text-xs text-gray-400">현재 화면에서 변경한 내용은 새로고침하면 초기화됩니다. 저장 API는 추후 연결 예정입니다.</p>
         </section>
       </main>
 
@@ -137,7 +194,7 @@ export default function ProjectExperiencePage() {
             </div>
             <div className="mt-6 flex justify-end gap-2">
               <button type="button" onClick={closeForm} className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">취소</button>
-              <button type="submit" disabled={!form.name.trim()} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300">저장</button>
+              <button type="submit" disabled={isSubmitting || !form.name.trim()} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300">저장</button>
             </div>
           </form>
         </div>

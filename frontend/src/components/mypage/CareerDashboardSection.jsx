@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react'
 import { ArrowRight, BriefcaseBusiness, CalendarDays, FolderKanban, Route, Target, Wrench } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { CAREER_PLACEHOLDERS, INITIAL_PROJECTS, INITIAL_SKILLS } from '../../mocks/careerProfile'
+import { CAREER_PLACEHOLDERS } from '../../mocks/careerProfile'
+import { getProjects, getSkills } from '../../api/career'
 
 function StatusCard({ icon: Icon, title, value, description }) {
   return (
@@ -44,6 +46,15 @@ function ManageCard({ title, count, items, buttonLabel, onClick }) {
 
 export default function CareerDashboardSection({ desiredJob, bookmarkCount }) {
   const navigate = useNavigate()
+  const [skills, setSkills] = useState([])
+  const [projects, setProjects] = useState([])
+
+  useEffect(() => {
+    let isMounted = true
+    getSkills().then((data) => { if (isMounted) setSkills(data) }).catch(() => {})
+    getProjects().then((data) => { if (isMounted) setProjects(data) }).catch(() => {})
+    return () => { isMounted = false }
+  }, [])
 
   return (
     <div id="career-dashboard" className="scroll-mt-20 rounded-2xl bg-white p-6 shadow-sm">
@@ -65,15 +76,15 @@ export default function CareerDashboardSection({ desiredJob, bookmarkCount }) {
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <ManageCard
           title="보유 역량"
-          count={INITIAL_SKILLS.length}
-          items={INITIAL_SKILLS.map((skill) => skill.name)}
+          count={skills.length}
+          items={skills.map((skill) => skill.name)}
           buttonLabel="역량 관리"
           onClick={() => navigate('/mypage/skills')}
         />
         <ManageCard
           title="프로젝트 경험"
-          count={INITIAL_PROJECTS.length}
-          items={INITIAL_PROJECTS.map((project) => project.name)}
+          count={projects.length}
+          items={projects.map((project) => project.name)}
           buttonLabel="경험 관리"
           onClick={() => navigate('/mypage/projects')}
         />
