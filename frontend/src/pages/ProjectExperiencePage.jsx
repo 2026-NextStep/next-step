@@ -92,6 +92,7 @@ export default function ProjectExperiencePage() {
 
   const handleDelete = async (project) => {
     if (deletingId !== null) return
+    if (!window.confirm('정말 삭제하시겠습니까?')) return
     setDeletingId(project.id)
     try {
       await deleteProject(project.id)

@@ -13,6 +13,13 @@ import {
 const PROFICIENCY_OPTIONS = Object.values(PROFICIENCY_LABELS)
 const EMPTY_FORM = { name: '', proficiency: '초급' }
 
+const PROFICIENCY_BADGE_STYLES = {
+  BEGINNER: 'bg-gray-100 text-gray-600',
+  BASIC: 'bg-blue-50 text-blue-600',
+  INTERMEDIATE: 'bg-orange-50 text-orange-600',
+  ADVANCED: 'bg-green-50 text-green-600',
+}
+
 export default function SkillManagementPage() {
   const navigate = useNavigate()
   const [skills, setSkills] = useState([])
@@ -84,6 +91,7 @@ export default function SkillManagementPage() {
 
   const handleDelete = async (skill) => {
     if (deletingId !== null) return
+    if (!window.confirm('정말 삭제하시겠습니까?')) return
     setDeletingId(skill.id)
     try {
       await deleteSkill(skill.id)
@@ -141,7 +149,7 @@ export default function SkillManagementPage() {
                   <div key={skill.id} className="flex items-center justify-between gap-4 px-5 py-4">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-gray-900">{skill.name}</p>
-                      <span className="mt-1 inline-block rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-600">
+                      <span className={`mt-1 inline-block rounded-full px-2.5 py-1 text-xs font-medium ${PROFICIENCY_BADGE_STYLES[skill.proficiency]}`}>
                         {PROFICIENCY_LABELS[skill.proficiency]}
                       </span>
                     </div>
