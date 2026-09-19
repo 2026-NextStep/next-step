@@ -39,4 +39,7 @@ public class FastApiBasicInfo {
 
     @JsonProperty("work_hours")
     private String workHours;
+
+    @JsonProperty("employment_type")
+    private String employmentType;
 }

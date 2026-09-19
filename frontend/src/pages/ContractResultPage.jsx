@@ -69,6 +69,75 @@ function CopyButton({ text }) {
   )
 }
 
+/* ── 지원 당시 공고 조건과 비교 ──────────────────── */
+const POSTING_COMPARE_FIELDS = [
+  { key: 'employmentType', label: '고용형태', placeholder: '예: 정규직' },
+  { key: 'workLocation', label: '근무지', placeholder: '예: 서울시 강남구' },
+  { key: 'salary', label: '급여', placeholder: '예: 월 250만원' },
+]
+
+const EMPTY_POSTING_FORM = { employmentType: '', workLocation: '', salary: '' }
+
+function normalizeForCompare(value) {
+  return (value || '').replace(/\s+/g, '').toLowerCase()
+}
+
+function JobPostingComparisonSection({ basicInfo }) {
+  const [form, setForm] = useState(EMPTY_POSTING_FORM)
+  const [result, setResult] = useState(null)
+
+  const handleCompare = () => {
+    setResult(
+      POSTING_COMPARE_FIELDS.map(({ key, label }) => ({
+        key,
+        label,
+        match: normalizeForCompare(form[key]) === normalizeForCompare(basicInfo?.[key]),
+      }))
+    )
+  }
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm p-7">
+      <SectionHeader title="지원 당시 공고 조건과 비교" />
+      <p className="mb-4 -mt-3 text-xs text-gray-400">공고에서 확인했던 조건을 입력하면 계약서 내용과 비교해드립니다.</p>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {POSTING_COMPARE_FIELDS.map(({ key, label, placeholder }) => (
+          <div key={key}>
+            <label htmlFor={`posting-${key}`} className="mb-1.5 block text-xs font-medium text-gray-600">{label}</label>
+            <input
+              id={`posting-${key}`}
+              value={form[key]}
+              onChange={(e) => setForm((current) => ({ ...current, [key]: e.target.value }))}
+              placeholder={placeholder}
+              className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            />
+          </div>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={handleCompare}
+        className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+      >
+        비교하기
+      </button>
+
+      {result && (
+        <div className="mt-4 space-y-2">
+          {result.map((r) => (
+            <div key={r.key} className="flex items-center justify-between gap-4 rounded-xl border border-gray-100 px-4 py-3">
+              <span className="text-xs text-gray-500">{r.label}</span>
+              <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${r.match ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}>
+                {r.match ? '일치' : '불일치'}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 /* ── 메인 컴포넌트 ───────────────────────────────── */
 export default function ContractResultPage() {
   const { id } = useParams()
@@ -421,6 +490,9 @@ export default function ContractResultPage() {
                 ? <SalaryBreakdownTable data={data.salaryBreakdown} />
                 : <p className="text-xs text-gray-400">급여 정보가 없습니다.</p>}
             </div>
+
+            {/* 지원 당시 공고 조건과 비교 */}
+            <JobPostingComparisonSection basicInfo={data.basicInfo} />
           </div>
 
           {/* ════ 우측 사이드바 ══════════════════════ */}
@@ -457,6 +529,8 @@ export default function ContractResultPage() {
                       ['근무시간', data.basicInfo.workingHours || '정보 없음'],
                       ['수습기간', data.basicInfo.probationPeriod || '없음'],
                       ['급여', data.basicInfo.salary || '정보 없음'],
+                      ['근무지', data.basicInfo.workLocation || '정보 없음'],
+                      ['고용형태', data.basicInfo.employmentType || '정보 없음'],
                     ].map(([label, value]) => (
                       <div key={label} className="flex justify-between gap-4 text-xs">
                         <dt className="text-gray-400 shrink-0">{label}</dt>

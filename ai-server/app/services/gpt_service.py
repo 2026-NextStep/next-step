@@ -99,6 +99,7 @@ HIGH 조항이 많을수록 100에 가깝게, MEDIUM만 소수면 40에 가깝�
 - key_clauses, risks, precautions, questions_for_recruiter 각 최대 3개.
 - summary는 100자 이내로 작성할 것.
 - basic_info.company_name에는 사업체명·회사명만, employer_name에는 사업주·대표이사 성명만 적을 것.
+- basic_info.employment_type에는 고용형태(정규직/계약직/인턴 등)만 적고, 명시되어 있지 않으면 null로 둘 것.
 - 계약서에 수습기간이 없으면 probation_period는 null 대신 반드시 "없음"으로 적을 것.
 - salary_breakdown에는 원문에서 확인한 세전 월급 gross_salary와 추출 근거 note만 작성할 것.
 - 연봉만 있으면 12로 나누고 시급제면 209를 곱하되, 불확실하면 gross_salary는 null로 둘 것.

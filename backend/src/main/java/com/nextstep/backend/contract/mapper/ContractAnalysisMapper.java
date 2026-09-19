@@ -105,6 +105,8 @@ public class ContractAnalysisMapper {
                 .workingHours(src.getWorkHours())
                 .probationPeriod(src.getProbationPeriod())
                 .salary(salaryStr)
+                .workLocation(src.getWorkLocation())
+                .employmentType(src.getEmploymentType())
                 .build();
     }
 
