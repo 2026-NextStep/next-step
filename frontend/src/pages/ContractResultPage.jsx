@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useBlocker } from 'react-router-dom'
-import { Loader2, Copy, Check, Download } from 'lucide-react'
+import { Loader2, Copy, Check, Download, ChevronDown, ChevronUp } from 'lucide-react'
 import { getContractAnalysis, deleteContract } from '../api/contract'
 import { getToken } from '../utils/authUtils'
 import RiskItemCard from '../components/contract/RiskItemCard'
@@ -83,6 +83,7 @@ function normalizeForCompare(value) {
 }
 
 function JobPostingComparisonSection({ basicInfo }) {
+  const [isComparisonOpen, setIsComparisonOpen] = useState(false)
   const [form, setForm] = useState(EMPTY_POSTING_FORM)
   const [result, setResult] = useState(null)
 
@@ -97,41 +98,56 @@ function JobPostingComparisonSection({ basicInfo }) {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-7">
-      <SectionHeader title="지원 당시 공고 조건과 비교" />
-      <p className="mb-4 -mt-3 text-xs text-gray-400">공고에서 확인했던 조건을 입력하면 계약서 내용과 비교해드립니다.</p>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {POSTING_COMPARE_FIELDS.map(({ key, label, placeholder }) => (
-          <div key={key}>
-            <label htmlFor={`posting-${key}`} className="mb-1.5 block text-xs font-medium text-gray-600">{label}</label>
-            <input
-              id={`posting-${key}`}
-              value={form[key]}
-              onChange={(e) => setForm((current) => ({ ...current, [key]: e.target.value }))}
-              placeholder={placeholder}
-              className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            />
-          </div>
-        ))}
-      </div>
+    <div className="bg-white rounded-2xl shadow-sm p-6">
       <button
         type="button"
-        onClick={handleCompare}
-        className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        onClick={() => setIsComparisonOpen((open) => !open)}
+        className="flex w-full items-center justify-between"
+        aria-expanded={isComparisonOpen}
       >
-        비교하기
+        <h2 className="text-sm font-bold text-gray-900">지원했던 공고 조건과 비교해보기</h2>
+        {isComparisonOpen
+          ? <ChevronUp size={16} className="shrink-0 text-gray-400" />
+          : <ChevronDown size={16} className="shrink-0 text-gray-400" />}
       </button>
 
-      {result && (
-        <div className="mt-4 space-y-2">
-          {result.map((r) => (
-            <div key={r.key} className="flex items-center justify-between gap-4 rounded-xl border border-gray-100 px-4 py-3">
-              <span className="text-xs text-gray-500">{r.label}</span>
-              <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${r.match ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}>
-                {r.match ? '일치' : '불일치'}
-              </span>
+      {isComparisonOpen && (
+        <div className="mt-5">
+          <p className="mb-4 text-xs text-gray-400">공고에서 확인했던 조건을 입력하면 계약서 내용과 비교해드립니다.</p>
+          <div className="space-y-3">
+            {POSTING_COMPARE_FIELDS.map(({ key, label, placeholder }) => (
+              <div key={key}>
+                <label htmlFor={`posting-${key}`} className="mb-1.5 block text-xs font-medium text-gray-600">{label}</label>
+                <input
+                  id={`posting-${key}`}
+                  value={form[key]}
+                  onChange={(e) => setForm((current) => ({ ...current, [key]: e.target.value }))}
+                  placeholder={placeholder}
+                  className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={handleCompare}
+            className="mt-4 w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            비교하기
+          </button>
+
+          {result && (
+            <div className="mt-4 space-y-2">
+              {result.map((r) => (
+                <div key={r.key} className="flex items-center justify-between gap-4 rounded-xl border border-gray-100 px-4 py-3">
+                  <span className="text-xs text-gray-500">{r.label}</span>
+                  <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${r.match ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}>
+                    {r.match ? '일치' : '불일치'}
+                  </span>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
       )}
     </div>
@@ -154,6 +170,8 @@ export default function ContractResultPage() {
   const [isLeaving, setIsLeaving] = useState(false)
   const isLeavingRef = useRef(false)
   const [hasPdfSaved, setHasPdfSaved] = useState(false)
+  const [isPrecautionsOpen, setIsPrecautionsOpen] = useState(false)
+  const [isQuestionsOpen, setIsQuestionsOpen] = useState(false)
 
   const shouldWarnBeforeLeave = !loading && !notFound && data && !isLeaving
 
@@ -490,9 +508,6 @@ export default function ContractResultPage() {
                 ? <SalaryBreakdownTable data={data.salaryBreakdown} />
                 : <p className="text-xs text-gray-400">급여 정보가 없습니다.</p>}
             </div>
-
-            {/* 지원 당시 공고 조건과 비교 */}
-            <JobPostingComparisonSection basicInfo={data.basicInfo} />
           </div>
 
           {/* ════ 우측 사이드바 ══════════════════════ */}
@@ -542,60 +557,85 @@ export default function ContractResultPage() {
                 : <p className="text-xs text-gray-400">계약 기본 정보가 없습니다.</p>}
             </div>
 
+            {/* 지원했던 공고 조건과 비교 */}
+            <JobPostingComparisonSection basicInfo={data.basicInfo} />
+
             {/* 서명 전 주의사항 */}
             <div className="bg-white rounded-2xl shadow-sm p-6">
-              <SectionHeader
-                icon={
+              <button
+                type="button"
+                onClick={() => setIsPrecautionsOpen((open) => !open)}
+                className="flex w-full items-center justify-between"
+                aria-expanded={isPrecautionsOpen}
+              >
+                <div className="flex items-center gap-2">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="10" />
                     <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
                     <line x1="12" y1="17" x2="12" y2="17" />
                   </svg>
-                }
-                title="서명 전 주의사항"
-              />
-              <div className="space-y-4">
-                {(data.precautions?.length ?? 0) > 0
-                  ? data.precautions.map((p, i) => (
-                      <div key={i} className="flex items-start gap-2.5">
-                        <svg className="shrink-0 mt-0.5" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="12" cy="12" r="10" />
-                          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                          <line x1="12" y1="17" x2="12" y2="17" />
-                        </svg>
-                        <div>
-                          <p className="text-xs font-semibold text-gray-800 mb-0.5">{p.title}</p>
-                          <p className="text-xs text-gray-500 leading-relaxed">{p.description}</p>
+                  <h2 className="text-sm font-bold text-gray-900">서명 전 주의사항</h2>
+                </div>
+                {isPrecautionsOpen
+                  ? <ChevronUp size={16} className="shrink-0 text-gray-400" />
+                  : <ChevronDown size={16} className="shrink-0 text-gray-400" />}
+              </button>
+
+              {isPrecautionsOpen && (
+                <div className="mt-5 space-y-4">
+                  {(data.precautions?.length ?? 0) > 0
+                    ? data.precautions.map((p, i) => (
+                        <div key={i} className="flex items-start gap-2.5">
+                          <svg className="shrink-0 mt-0.5" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                            <line x1="12" y1="17" x2="12" y2="17" />
+                          </svg>
+                          <div>
+                            <p className="text-xs font-semibold text-gray-800 mb-0.5">{p.title}</p>
+                            <p className="text-xs text-gray-500 leading-relaxed">{p.description}</p>
+                          </div>
                         </div>
-                      </div>
-                    ))
-                  : <p className="text-xs text-gray-400">주의사항 정보가 없습니다.</p>}
-              </div>
+                      ))
+                    : <p className="text-xs text-gray-400">주의사항 정보가 없습니다.</p>}
+                </div>
+              )}
             </div>
 
             {/* 채용 담당자에게 물어볼 질문 */}
             <div className="bg-white rounded-2xl shadow-sm p-6">
-              <SectionHeader
-                icon={
+              <button
+                type="button"
+                onClick={() => setIsQuestionsOpen((open) => !open)}
+                className="flex w-full items-center justify-between"
+                aria-expanded={isQuestionsOpen}
+              >
+                <div className="flex items-center gap-2">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                   </svg>
-                }
-                title="채용 담당자에게 물어볼 질문"
-              />
-              <div className="space-y-3">
-                {(data.questionsForRecruiter?.length ?? 0) > 0
-                  ? data.questionsForRecruiter.map((q, i) => (
-                      <div
-                        key={i}
-                        className="flex items-start gap-2 pb-3 border-b border-gray-50 last:border-0 last:pb-0"
-                      >
-                        <p className="flex-1 text-xs text-gray-600 leading-relaxed">{q}</p>
-                        <CopyButton text={q} />
-                      </div>
-                    ))
-                  : <p className="text-xs text-gray-400">추천 질문이 없습니다.</p>}
-              </div>
+                  <h2 className="text-sm font-bold text-gray-900">채용 담당자에게 물어볼 질문</h2>
+                </div>
+                {isQuestionsOpen
+                  ? <ChevronUp size={16} className="shrink-0 text-gray-400" />
+                  : <ChevronDown size={16} className="shrink-0 text-gray-400" />}
+              </button>
+
+              {isQuestionsOpen && (
+                <div className="mt-5 space-y-3">
+                  {(data.questionsForRecruiter?.length ?? 0) > 0
+                    ? data.questionsForRecruiter.map((q, i) => (
+                        <div
+                          key={i}
+                          className="flex items-start gap-2 pb-3 border-b border-gray-50 last:border-0 last:pb-0"
+                        >
+                          <p className="flex-1 text-xs text-gray-600 leading-relaxed">{q}</p>
+                          <CopyButton text={q} />
+                        </div>
+                      ))
+                    : <p className="text-xs text-gray-400">추천 질문이 없습니다.</p>}
+                </div>
+              )}
             </div>
           </div>
         </div>
