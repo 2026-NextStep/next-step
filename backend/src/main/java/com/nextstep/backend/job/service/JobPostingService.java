@@ -45,7 +45,7 @@ public class JobPostingService {
         Sort sortOrder = switch (sort) {
             case "마감일순" -> Sort.by(Sort.Direction.ASC, "endDate");
             case "조회수순" -> Sort.by(Sort.Direction.DESC, "viewCount");
-            default        -> Sort.by(Sort.Direction.DESC, "createdAt");
+            default        -> Sort.by(Sort.Direction.DESC, "startDate");
         };
 
         PageRequest pageable = PageRequest.of(page, size, sortOrder);
@@ -55,7 +55,8 @@ public class JobPostingService {
             .and(JobPostingSpec.employmentType(employment))
             .and(JobPostingSpec.workLocation(region))
             .and(JobPostingSpec.statusFilter(status))
-            .and(JobPostingSpec.quickFilter(quickFilter));
+            .and(JobPostingSpec.quickFilter(quickFilter))
+            .and(JobPostingSpec.excludeExpiredUnless(status));
 
         Set<Long> bookmarkedIds = (memberId != null)
                 ? bookmarkRepository.findPostingIdSetByMemberId(memberId)
