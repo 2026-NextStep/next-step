@@ -5,7 +5,7 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 from app.schemas.analysis import (
     AnalyzeResponse, BasicInfoSchema, KeyClause, PrecautionSchema, Risk, SalaryBreakdownSchema,
 )
-from app.services import gpt_service, ocr_service
+from app.services import gpt_service, ocr_service, rule_checker
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +44,8 @@ async def analyze_contract(file: UploadFile = File(...)) -> AnalyzeResponse:
         logger.info("[1/2] OCR 완료 — %d자 추출", len(ocr_text))
         logger.info("OCR 미리보기 (앞 100자): %s", ocr_text[:100])
 
+        missing = rule_checker.check_required_items(ocr_text)
+
         # Step 2: Gemini 분석
         logger.info("[2/2] Gemini 분석 호출 중...")
         analysis = await gpt_service.analyze_contract(ocr_text)
@@ -56,6 +58,15 @@ async def analyze_contract(file: UploadFile = File(...)) -> AnalyzeResponse:
         basic_info_data = analysis.get("basic_info")
         salary_data = analysis.get("salary_breakdown")
 
+        precautions = [PrecautionSchema(**p) for p in analysis.get("precautions", [])]
+        for item in missing:
+            precautions.append(
+                PrecautionSchema(
+                    title=f"'{item}' 확인 필요",
+                    description=f"계약서에서 '{item}' 관련 내용을 찾지 못했습니다. 실제로 명시되어 있는지 확인하세요.",
+                )
+            )
+
         return AnalyzeResponse(
             success=True,
             ocr_text=ocr_text,
@@ -67,7 +78,7 @@ async def analyze_contract(file: UploadFile = File(...)) -> AnalyzeResponse:
             recommendations=analysis.get("recommendations", []),
             basic_info=BasicInfoSchema(**basic_info_data) if basic_info_data else None,
             salary_breakdown=SalaryBreakdownSchema(**salary_data) if salary_data else None,
-            precautions=[PrecautionSchema(**p) for p in analysis.get("precautions", [])],
+            precautions=precautions,
             questions_for_recruiter=analysis.get("questions_for_recruiter", []),
         )
 
