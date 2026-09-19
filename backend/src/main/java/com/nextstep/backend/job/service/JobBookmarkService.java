@@ -40,16 +40,15 @@ public class JobBookmarkService {
     }
 
     public List<Map<String, Object>> getBookmarkedPostings(Long memberId) {
-        List<Long> postingIds = bookmarkRepository.findByMemberId(memberId)
-                .stream()
-                .map(JobBookmark::getPostingId)
-                .collect(Collectors.toList());
+        List<JobBookmark> bookmarks = bookmarkRepository.findByMemberId(memberId);
+        if (bookmarks.isEmpty()) return Collections.emptyList();
 
-        if (postingIds.isEmpty()) return Collections.emptyList();
+        Map<Long, Boolean> alertSentByPostingId = bookmarks.stream()
+                .collect(Collectors.toMap(JobBookmark::getPostingId, JobBookmark::isDeadlineAlertSent, (a, b) -> a));
 
         LocalDate today = LocalDate.now();
 
-        return jobPostingRepository.findAllById(postingIds)
+        return jobPostingRepository.findAllById(alertSentByPostingId.keySet())
                 .stream()
                 .map(job -> {
                     LocalDate endDate = job.getEndDate();
@@ -65,6 +64,7 @@ public class JobBookmarkService {
                     m.put("careerLevel",         job.getRecruitType());
                     m.put("dDay",                dDay);
                     m.put("isAlwaysRecruiting",  isAlwaysRecruiting);
+                    m.put("deadlineAlertSent",   alertSentByPostingId.get(job.getPostingId()));
                     return m;
                 })
                 .collect(Collectors.toList());

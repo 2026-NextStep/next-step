@@ -13,6 +13,15 @@ spring.servlet.multipart.max-request-size=10MB
 logging.level.org.hibernate.SQL=DEBUG
 logging.level.org.hibernate.orm.jdbc.bind=TRACE
 
+# AI Server (FastAPI)
+ai.fastapi.base-url=http://localhost:8000
+
+# Frontend (메일 내 링크 생성용)
+frontend.base-url=http://localhost:5173
+
+# OpenAI
+openai.api-key=YOUR_OPENAI_API_KEY
+
 # JWT
 jwt.secret=YOUR_JWT_SECRET_32CHARS_OR_MORE_HERE
 
