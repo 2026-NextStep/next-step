@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useBlocker } from 'react-router-dom'
 import { Loader2, Copy, Check, Download } from 'lucide-react'
 import { getContractAnalysis, deleteContract } from '../api/contract'
+import { getToken } from '../utils/authUtils'
 import RiskItemCard from '../components/contract/RiskItemCard'
 import SummaryCard from '../components/contract/SummaryCard'
 import SalaryBreakdownTable from '../components/contract/SalaryBreakdownTable'
@@ -124,6 +125,20 @@ export default function ContractResultPage() {
     window.addEventListener('beforeunload', handleBeforeUnload)
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [shouldWarnBeforeLeave])
+
+  useEffect(() => {
+    if (!shouldWarnBeforeLeave) return
+    const handlePageHide = () => {
+      // 탭 닫기/새로고침 시 best-effort 삭제 요청. axios는 keepalive를 지원하지 않아 fetch 사용.
+      fetch(`${import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api/v1'}/contracts/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${getToken()}` },
+        keepalive: true,
+      }).catch(() => {})
+    }
+    window.addEventListener('pagehide', handlePageHide)
+    return () => window.removeEventListener('pagehide', handlePageHide)
+  }, [shouldWarnBeforeLeave, id])
 
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
