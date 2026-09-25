@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -83,7 +85,11 @@ public class CareerService {
         Member member = member(memberId);
         int skillCount = skillRepository.findByMember_MemberIdOrderByCreatedAtAscIdAsc(memberId).size();
         int projectCount = projectRepository.findByMember_MemberIdOrderByCreatedAtAscIdAsc(memberId).size();
-        int resumeCount = resumeRepository.findByUsernameOrderByUpdatedAtDesc(member.getUsername()).size();
+        var resumes = resumeRepository.findByUsernameOrderByUpdatedAtDesc(member.getUsername());
+        int resumeCount = resumes.size();
+        Long daysSinceLastResumeUpdate = resumes.isEmpty()
+                ? null
+                : ChronoUnit.DAYS.between(resumes.get(0).getUpdatedAt(), LocalDateTime.now());
 
         String nextStepMessage;
         if (skillCount == 0) {
@@ -105,6 +111,8 @@ public class CareerService {
         return DashboardSummaryResponse.builder()
                 .nextStepMessage(nextStepMessage)
                 .profileCompleteness(profileCompleteness)
+                .resumeCount(resumeCount)
+                .daysSinceLastResumeUpdate(daysSinceLastResumeUpdate)
                 .build();
     }
 

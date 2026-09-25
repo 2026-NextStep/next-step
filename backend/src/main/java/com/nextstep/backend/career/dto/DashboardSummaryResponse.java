@@ -12,4 +12,6 @@ import lombok.NoArgsConstructor;
 public class DashboardSummaryResponse {
     private String nextStepMessage;
     private int profileCompleteness;
+    private int resumeCount;
+    private Long daysSinceLastResumeUpdate;
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowRight, BriefcaseBusiness, CalendarDays, FolderKanban, Route, Target, Wrench } from 'lucide-react'
+import { ArrowRight, BriefcaseBusiness, CalendarDays, FileText, Route, Wrench } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { CAREER_PLACEHOLDERS } from '../../mocks/careerProfile'
 import { getDashboardSummary, getProjects, getSkills } from '../../api/career'
@@ -60,17 +60,23 @@ export default function CareerDashboardSection({ desiredJob, bookmarkCount }) {
 
   return (
     <div id="career-dashboard" className="scroll-mt-20 rounded-2xl bg-white p-6 shadow-sm">
-      <div className="mb-5 flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">취업 준비 현황</h2>
-          <p className="mt-1 text-sm text-gray-400">등록한 경험을 바탕으로 준비 상황을 확인하는 공간입니다.</p>
-        </div>
-        <span className="shrink-0 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-500">UI 미리보기</span>
+      <div className="mb-5">
+        <h2 className="text-xl font-bold text-gray-900">취업 준비 현황</h2>
+        <p className="mt-1 text-sm text-gray-400">등록한 경험을 바탕으로 준비 상황을 확인하는 공간입니다.</p>
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatusCard icon={BriefcaseBusiness} title="희망 직무" value={desiredJob || '-'} />
-        <StatusCard icon={Target} title="최근 공고 적합도" value={CAREER_PLACEHOLDERS.recentMatch} />
+        <StatusCard
+          icon={FileText}
+          title="자소서 현황"
+          value={summary?.resumeCount ? `${summary.resumeCount}개 작성` : '작성한 자소서 없음'}
+          description={
+            summary?.resumeCount
+              ? (summary.daysSinceLastResumeUpdate === 0 ? '오늘 수정함' : `${summary.daysSinceLastResumeUpdate}일 전 수정`)
+              : undefined
+          }
+        />
         <StatusCard icon={Wrench} title="프로필 완성도" value={`${summary?.profileCompleteness ?? 0}%`} />
         <StatusCard icon={Route} title="이번 주 Next Step" value={summary?.nextStepMessage} />
       </div>
@@ -99,11 +105,6 @@ export default function CareerDashboardSection({ desiredJob, bookmarkCount }) {
           value={`관심 공고 ${bookmarkCount}개 · 지원 ${CAREER_PLACEHOLDERS.applicationStatus}`}
         />
         <StatusCard icon={CalendarDays} title="채용 마감 일정" value={CAREER_PLACEHOLDERS.deadlines} />
-      </div>
-
-      <div className="mt-4 flex items-center gap-2 rounded-xl bg-blue-50 px-4 py-3 text-xs text-blue-600">
-        <FolderKanban size={15} />
-        적합도와 부족 역량은 향후 채용공고 분석 API 연결 후 제공됩니다.
       </div>
     </div>
   )
