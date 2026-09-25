@@ -12,6 +12,8 @@ logger = logging.getLogger(__name__)
 @dataclass
 class Settings:
     openai_api_key: str = field(default_factory=lambda: os.getenv("OPENAI_API_KEY", ""))
+    gemini_api_key: str = field(default_factory=lambda: os.getenv("GEMINI_API_KEY", ""))
+    gemini_model: str = field(default_factory=lambda: os.getenv("GEMINI_MODEL", "gemini-3.5-flash"))
     gcp_project_id: str = field(default_factory=lambda: os.getenv("GCP_PROJECT_ID", ""))
     gcp_location: str = field(default_factory=lambda: os.getenv("GCP_LOCATION", "us"))
     gcp_processor_id: str = field(default_factory=lambda: os.getenv("GCP_PROCESSOR_ID", ""))
@@ -44,6 +46,8 @@ def validate_config() -> None:
         )
 
     logger.info("OPENAI_API_KEY                 : 로드됨")
+    logger.info("GEMINI_API_KEY                 : %s", "로드됨" if settings.gemini_api_key else "미설정")
+    logger.info("GEMINI_MODEL                   : %s", settings.gemini_model)
     logger.info("GOOGLE_APPLICATION_CREDENTIALS : %s", settings.google_application_credentials)
     logger.info("GCP_PROJECT_ID                 : %s", settings.gcp_project_id)
     logger.info("GCP_PROCESSOR_ID               : 로드됨")

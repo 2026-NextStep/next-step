@@ -3,6 +3,8 @@ import Layout from './components/common/Layout'
 import PrivateRoute from './components/common/PrivateRoute'
 import HomePage from './pages/HomePage'
 import MyPage from './pages/MyPage'
+import SkillManagementPage from './pages/SkillManagementPage'
+import ProjectExperiencePage from './pages/ProjectExperiencePage'
 import ContractUploadPage from './pages/ContractUploadPage'
 import ContractResultPage from './pages/ContractResultPage'
 import Login from './pages/Login'
@@ -33,6 +35,8 @@ const router = createBrowserRouter([
     children: [
       { path: '/',              element: <HomePage /> },
       { path: '/mypage',        element: <PrivateRoute><MyPage /></PrivateRoute> },
+      { path: '/mypage/skills', element: <PrivateRoute><SkillManagementPage /></PrivateRoute> },
+      { path: '/mypage/projects', element: <PrivateRoute><ProjectExperiencePage /></PrivateRoute> },
       { path: '/contract/upload', element: <PrivateRoute><ContractUploadPage /></PrivateRoute> },
       { path: '/contract/result/:id', element: <PrivateRoute><ContractResultPage /></PrivateRoute> },
       { path: '/jobs',          element: <JobListPage /> },
