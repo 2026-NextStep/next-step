@@ -6,6 +6,7 @@ import com.nextstep.backend.career.repository.*;
 import com.nextstep.backend.career.service.CareerService;
 import com.nextstep.backend.common.exception.GlobalExceptionHandler;
 import com.nextstep.backend.common.util.SecurityUtil;
+import com.nextstep.backend.coverletter.repository.ResumeRepository;
 import com.nextstep.backend.member.entity.Member;
 import com.nextstep.backend.member.repository.MemberRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class CareerApiTest {
     private MemberSkillRepository skills;
     private ProjectExperienceRepository projects;
+    private ResumeRepository resumes;
     private SecurityUtil security;
     private MockMvc mvc;
     private Member member;
@@ -34,6 +36,7 @@ class CareerApiTest {
     void setUp() {
         skills = mock(MemberSkillRepository.class);
         projects = mock(ProjectExperienceRepository.class);
+        resumes = mock(ResumeRepository.class);
         MemberRepository members = mock(MemberRepository.class);
         // 실제 SecurityUtil을 사용해 SecurityContext의 username -> memberId 변환도 검증한다.
         security = new SecurityUtil(members);
@@ -42,7 +45,7 @@ class CareerApiTest {
         when(members.findById(1L)).thenReturn(Optional.of(member));
         org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
                 new org.springframework.security.authentication.UsernamePasswordAuthenticationToken("user-a", null, List.of()));
-        CareerService service = new CareerService(skills, projects, members);
+        CareerService service = new CareerService(skills, projects, members, resumes);
         mvc = MockMvcBuilders.standaloneSetup(new CareerController(service, security))
                 .setControllerAdvice(new GlobalExceptionHandler()).build();
     }

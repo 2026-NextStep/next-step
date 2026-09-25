@@ -11,6 +11,11 @@ export const PROFICIENCY_VALUES = Object.fromEntries(
   Object.entries(PROFICIENCY_LABELS).map(([value, label]) => [label, value])
 )
 
+export async function getDashboardSummary() {
+  const { data } = await axiosInstance.get('/users/me/dashboard-summary')
+  return data
+}
+
 export async function getSkills() {
   const { data } = await axiosInstance.get('/users/me/skills')
   return data

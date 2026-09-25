@@ -3,6 +3,7 @@ package com.nextstep.backend.career.service;
 import com.nextstep.backend.career.dto.*;
 import com.nextstep.backend.career.entity.*;
 import com.nextstep.backend.career.repository.*;
+import com.nextstep.backend.coverletter.repository.ResumeRepository;
 import com.nextstep.backend.member.entity.Member;
 import com.nextstep.backend.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ public class CareerService {
     private final MemberSkillRepository skillRepository;
     private final ProjectExperienceRepository projectRepository;
     private final MemberRepository memberRepository;
+    private final ResumeRepository resumeRepository;
 
     public List<SkillResponse> getSkills(Long memberId) {
         return skillRepository.findByMember_MemberIdOrderByCreatedAtAscIdAsc(memberId)
@@ -75,6 +77,35 @@ public class CareerService {
     @Transactional
     public void deleteProject(Long memberId, Long id) {
         projectRepository.delete(ownedProject(memberId, id));
+    }
+
+    public DashboardSummaryResponse getDashboardSummary(Long memberId) {
+        Member member = member(memberId);
+        int skillCount = skillRepository.findByMember_MemberIdOrderByCreatedAtAscIdAsc(memberId).size();
+        int projectCount = projectRepository.findByMember_MemberIdOrderByCreatedAtAscIdAsc(memberId).size();
+        int resumeCount = resumeRepository.findByUsernameOrderByUpdatedAtDesc(member.getUsername()).size();
+
+        String nextStepMessage;
+        if (skillCount == 0) {
+            nextStepMessage = "역량을 등록해보세요";
+        } else if (projectCount == 0) {
+            nextStepMessage = "프로젝트 경험을 추가해보세요";
+        } else if (resumeCount == 0) {
+            nextStepMessage = "자기소개서를 작성해보세요";
+        } else {
+            nextStepMessage = "등록한 정보를 최신 상태로 유지해보세요";
+        }
+
+        int profileCompleteness = 0;
+        if (member.getDesiredJob() != null && !member.getDesiredJob().isBlank()) profileCompleteness += 25;
+        if (skillCount >= 3) profileCompleteness += 25;
+        if (projectCount >= 1) profileCompleteness += 25;
+        if (resumeCount >= 1) profileCompleteness += 25;
+
+        return DashboardSummaryResponse.builder()
+                .nextStepMessage(nextStepMessage)
+                .profileCompleteness(profileCompleteness)
+                .build();
     }
 
     private Member member(Long memberId) {

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { ArrowRight, BriefcaseBusiness, CalendarDays, FolderKanban, Route, Target, Wrench } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { CAREER_PLACEHOLDERS } from '../../mocks/careerProfile'
-import { getProjects, getSkills } from '../../api/career'
+import { getDashboardSummary, getProjects, getSkills } from '../../api/career'
 
 function StatusCard({ icon: Icon, title, value, description }) {
   return (
@@ -48,11 +48,13 @@ export default function CareerDashboardSection({ desiredJob, bookmarkCount }) {
   const navigate = useNavigate()
   const [skills, setSkills] = useState([])
   const [projects, setProjects] = useState([])
+  const [summary, setSummary] = useState(null)
 
   useEffect(() => {
     let isMounted = true
     getSkills().then((data) => { if (isMounted) setSkills(data) }).catch(() => {})
     getProjects().then((data) => { if (isMounted) setProjects(data) }).catch(() => {})
+    getDashboardSummary().then((data) => { if (isMounted) setSummary(data) }).catch(() => {})
     return () => { isMounted = false }
   }, [])
 
@@ -69,8 +71,8 @@ export default function CareerDashboardSection({ desiredJob, bookmarkCount }) {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatusCard icon={BriefcaseBusiness} title="희망 직무" value={desiredJob || '-'} />
         <StatusCard icon={Target} title="최근 공고 적합도" value={CAREER_PLACEHOLDERS.recentMatch} />
-        <StatusCard icon={Wrench} title="부족 역량" value={CAREER_PLACEHOLDERS.skillGap} description="공고 분석 연동 예정" />
-        <StatusCard icon={Route} title="이번 주 Next Step" value={CAREER_PLACEHOLDERS.nextStep} />
+        <StatusCard icon={Wrench} title="프로필 완성도" value={`${summary?.profileCompleteness ?? 0}%`} />
+        <StatusCard icon={Route} title="이번 주 Next Step" value={summary?.nextStepMessage} />
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">

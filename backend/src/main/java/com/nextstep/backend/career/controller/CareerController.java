@@ -21,6 +21,11 @@ public class CareerController {
     private final CareerService careerService;
     private final SecurityUtil securityUtil;
 
+    @GetMapping("/dashboard-summary")
+    public ResponseEntity<DashboardSummaryResponse> getDashboardSummary() {
+        return ResponseEntity.ok(careerService.getDashboardSummary(securityUtil.getCurrentMemberId()));
+    }
+
     @GetMapping("/skills")
     public ResponseEntity<List<SkillResponse>> getSkills() {
         return ResponseEntity.ok(careerService.getSkills(securityUtil.getCurrentMemberId()));

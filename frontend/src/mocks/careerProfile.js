@@ -17,9 +17,9 @@ export const INITIAL_PROJECTS = [
 ]
 
 export const CAREER_PLACEHOLDERS = {
-  recentMatch: '분석 결과 없음',
-  skillGap: '-',
-  nextStep: '준비 중',
-  applicationStatus: '준비 중',
-  deadlines: '준비 중',
+  recentMatch: '78%',
+  skillGap: 'Docker, Redis',
+  nextStep: 'Docker 배포 경험을 기존 프로젝트에 추가해보기',
+  applicationStatus: '지원 3곳 · 서류합격 1곳',
+  deadlines: 'D-3 (B기업 서류 마감)',
 }
