@@ -4,9 +4,26 @@ import { useNavigate } from 'react-router-dom'
 import { CAREER_PLACEHOLDERS } from '../../mocks/careerProfile'
 import { getDashboardSummary, getProjects, getSkills } from '../../api/career'
 
-function StatusCard({ icon: Icon, title, value, description }) {
+function StatusCard({ icon: Icon, title, value, description, onClick }) {
+  const clickableProps = onClick
+    ? {
+        role: 'button',
+        tabIndex: 0,
+        onClick,
+        onKeyDown: (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            onClick()
+          }
+        },
+      }
+    : {}
+
   return (
-    <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-4">
+    <div
+      className={`rounded-xl border border-gray-100 bg-gray-50 px-4 py-4${onClick ? ' cursor-pointer transition-colors hover:bg-gray-100' : ''}`}
+      {...clickableProps}
+    >
       <div className="mb-3 flex items-center gap-2 text-gray-500">
         <Icon size={16} />
         <span className="text-xs font-medium">{title}</span>
@@ -76,6 +93,7 @@ export default function CareerDashboardSection({ desiredJob, bookmarkCount }) {
               ? (summary.daysSinceLastResumeUpdate === 0 ? '오늘 수정함' : `${summary.daysSinceLastResumeUpdate}일 전 수정`)
               : undefined
           }
+          onClick={() => navigate('/cover-letter')}
         />
         <StatusCard icon={Wrench} title="프로필 완성도" value={`${summary?.profileCompleteness ?? 0}%`} />
         <StatusCard icon={Route} title="이번 주 Next Step" value={summary?.nextStepMessage} />

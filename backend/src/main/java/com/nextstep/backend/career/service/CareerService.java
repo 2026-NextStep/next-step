@@ -85,7 +85,8 @@ public class CareerService {
         Member member = member(memberId);
         int skillCount = skillRepository.findByMember_MemberIdOrderByCreatedAtAscIdAsc(memberId).size();
         int projectCount = projectRepository.findByMember_MemberIdOrderByCreatedAtAscIdAsc(memberId).size();
-        var resumes = resumeRepository.findByUsernameOrderByUpdatedAtDesc(member.getUsername());
+        // 자소서 도메인은 Resume.username에 로그인 아이디가 아닌 닉네임을 저장하므로 닉네임으로 조회한다.
+        var resumes = resumeRepository.findByUsernameOrderByUpdatedAtDesc(member.getNickname());
         int resumeCount = resumes.size();
         Long daysSinceLastResumeUpdate = resumes.isEmpty()
                 ? null

@@ -6,6 +6,7 @@ import com.nextstep.backend.career.repository.*;
 import com.nextstep.backend.career.service.CareerService;
 import com.nextstep.backend.common.exception.GlobalExceptionHandler;
 import com.nextstep.backend.common.util.SecurityUtil;
+import com.nextstep.backend.coverletter.entity.Resume;
 import com.nextstep.backend.coverletter.repository.ResumeRepository;
 import com.nextstep.backend.member.entity.Member;
 import com.nextstep.backend.member.repository.MemberRepository;
@@ -18,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import static org.mockito.Mockito.*;
@@ -40,7 +42,7 @@ class CareerApiTest {
         MemberRepository members = mock(MemberRepository.class);
         // 실제 SecurityUtil을 사용해 SecurityContext의 username -> memberId 변환도 검증한다.
         security = new SecurityUtil(members);
-        member = Member.builder().memberId(1L).username("user-a").build();
+        member = Member.builder().memberId(1L).username("user-a").nickname("nick-a").build();
         when(members.findByUsername("user-a")).thenReturn(Optional.of(member));
         when(members.findById(1L)).thenReturn(Optional.of(member));
         org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
@@ -175,6 +177,36 @@ class CareerApiTest {
         when(skills.saveAndFlush(any())).thenThrow(new org.springframework.dao.DataIntegrityViolationException("duplicate"));
         mvc.perform(post("/api/v1/users/me/skills").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"React\",\"proficiency\":\"BASIC\"}")).andExpect(status().isConflict());
+    }
+
+    @Test
+    void dashboardSummaryLooksUpResumesByNicknameNotLoginUsername() throws Exception {
+        // Resume.username에는 로그인 아이디가 아닌 닉네임이 저장되므로 닉네임으로 조회해야 한다.
+        Resume resume = new Resume();
+        resume.setUsername("nick-a");
+        resume.setUpdatedAt(LocalDateTime.now().minusDays(2));
+        when(resumes.findByUsernameOrderByUpdatedAtDesc("nick-a")).thenReturn(List.of(resume));
+        when(skills.findByMember_MemberIdOrderByCreatedAtAscIdAsc(1L)).thenReturn(List.of());
+        when(projects.findByMember_MemberIdOrderByCreatedAtAscIdAsc(1L)).thenReturn(List.of());
+
+        mvc.perform(get("/api/v1/users/me/dashboard-summary"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resumeCount").value(1))
+                .andExpect(jsonPath("$.daysSinceLastResumeUpdate").value(2));
+        verify(resumes, never()).findByUsernameOrderByUpdatedAtDesc("user-a");
+    }
+
+    @Test
+    void profileCompletenessAccumulatesPerRegisteredSection() throws Exception {
+        ReflectionTestUtils.setField(member, "desiredJob", "백엔드 개발자");
+        when(skills.findByMember_MemberIdOrderByCreatedAtAscIdAsc(1L)).thenReturn(
+                List.of(MemberSkill.builder().build(), MemberSkill.builder().build(), MemberSkill.builder().build()));
+        when(projects.findByMember_MemberIdOrderByCreatedAtAscIdAsc(1L)).thenReturn(List.of(ProjectExperience.builder().build()));
+        when(resumes.findByUsernameOrderByUpdatedAtDesc("nick-a")).thenReturn(List.of());
+
+        mvc.perform(get("/api/v1/users/me/dashboard-summary"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.profileCompleteness").value(75));
     }
 
     @ParameterizedTest
