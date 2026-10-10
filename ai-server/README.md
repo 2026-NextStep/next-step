@@ -7,7 +7,7 @@
 - **FastAPI** — Python 웹 프레임워크
 - **Python 3.12**
 - **Google Document AI** — OCR (근로계약서 텍스트 추출)
-- **OpenAI GPT** — 위험 조항 분석
+- **Google Gemini** — 위험 조항 분석
 - **python-dotenv** — 환경 변수 관리
 - **Uvicorn** — ASGI 서버
 
@@ -56,7 +56,9 @@ pip install -r requirements.txt
 `.env.example`을 참고해서 `.env`를 작성합니다.
 
 ```text
-OPENAI_API_KEY=실제_OpenAI_API_키
+OPENAI_API_KEY=다른_AI_기능에서_사용하는_기존_키
+GEMINI_API_KEY=실제_Gemini_API_키
+GEMINI_MODEL=gemini-3.5-flash
 GOOGLE_APPLICATION_CREDENTIALS=./gcp-credentials.json
 GCP_PROJECT_ID=nextstep-ai-497817
 GCP_PROCESSOR_ID=실제_Document_AI_프로세서_ID
@@ -96,7 +98,7 @@ uvicorn app.main:app --reload --port 8000
 }
 ```
 
-> Phase 2에서 Google Document AI OCR → OpenAI GPT 분석 결과를 반환하도록 확장 예정
+> Google Document AI OCR → Google Gemini 분석 결과를 기존 응답 형식으로 반환합니다.
 
 ## 주의 사항
 

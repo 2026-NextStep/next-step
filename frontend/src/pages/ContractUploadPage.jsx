@@ -127,6 +127,7 @@ export default function ContractUploadPage() {
   const [uploadProgress, setUploadProgress] = useState(0)
   const [currentStep, setCurrentStep] = useState(null)
   const [fileError, setFileError] = useState(null)
+  const [uploadError, setUploadError] = useState(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -141,11 +142,13 @@ export default function ContractUploadPage() {
 
   const handleFileSelect = (f) => {
     setFileError(null)
+    setUploadError(null)
     setFile(f)
   }
 
   const handleAnalyze = async () => {
     if (!file || isUploading) return
+    setUploadError(null)
     setIsUploading(true)
     setCurrentStep('uploading')
     setUploadProgress(0)
@@ -155,7 +158,7 @@ export default function ContractUploadPage() {
       const contractId = response.contractId
       navigate(`/contract/result/${contractId}`)
     } catch (error) {
-      alert(error.response?.data?.message || '업로드 중 오류가 발생했습니다.')
+      setUploadError(error.response?.data?.message || '업로드 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
       setIsUploading(false)
       setCurrentStep(null)
       setUploadProgress(0)
@@ -204,6 +207,25 @@ export default function ContractUploadPage() {
 
             {file && (
               <FilePreviewCard file={file} onRemove={() => setFile(null)} disabled={isUploading} />
+            )}
+
+            {uploadError && (
+              <div className="mt-4 flex items-start gap-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3.5">
+                <svg
+                  width="16" height="16" viewBox="0 0 24 24"
+                  fill="none" stroke="currentColor" strokeWidth="2"
+                  strokeLinecap="round" strokeLinejoin="round"
+                  className="mt-0.5 shrink-0 text-red-500"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-red-600">업로드에 실패했습니다</p>
+                  <p className="mt-1 text-xs leading-relaxed text-red-400">{uploadError}</p>
+                </div>
+              </div>
             )}
 
             {currentStep === 'uploading' ? (

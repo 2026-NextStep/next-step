@@ -29,6 +29,7 @@ class BasicInfoSchema(BaseModel):
     job_description: Optional[str] = None
     work_hours: Optional[str] = None
     probation_period: Optional[str] = None
+    employment_type: Optional[str] = None
 
 
 class SalaryBreakdownSchema(BaseModel):

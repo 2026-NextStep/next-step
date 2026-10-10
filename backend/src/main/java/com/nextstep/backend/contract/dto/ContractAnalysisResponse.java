@@ -72,6 +72,8 @@ public class ContractAnalysisResponse {
         private String workingHours;
         private String probationPeriod;
         private String salary;
+        private String workLocation;
+        private String employmentType;
     }
 
     @Getter

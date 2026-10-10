@@ -16,13 +16,16 @@ axiosInstance.interceptors.request.use((config) => {
   return config
 })
 
-// 응답 인터셉터 — 401 수신 시 모든 인증 정보 제거 후 로그인 페이지로 이동
+// 응답 인터셉터 — 401 수신 시 모든 인증 정보 제거 후 로그인 페이지로 이동, 500은 콘솔에 기록
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status
+    if (status === 401 && window.location.pathname !== '/login') {
       clearAuth()
       window.location.href = '/login'
+    } else if (status >= 500) {
+      console.error(`[API 서버 오류] ${error.config?.method?.toUpperCase()} ${error.config?.url}`, error.response?.data)
     }
     return Promise.reject(error)
   }
