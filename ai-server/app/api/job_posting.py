@@ -49,6 +49,18 @@ UPSERT_DETAIL_SQL = """
 """
 
 
+# ongoingYn=Y 로는 진행중 공고만 내려오므로, 이미 저장된 공고는 마감일 기준으로 상태를 일괄 재계산
+REFRESH_STATUS_SQL = """
+    UPDATE job_posting_list
+    SET status = CASE
+        WHEN end_date < %s THEN '마감'
+        WHEN end_date <= %s THEN '마감임박'
+        ELSE '접수중'
+    END
+    WHERE end_date IS NOT NULL
+"""
+
+
 def _get_db_connection():
     return pymysql.connect(
         host=settings.db_host,
@@ -149,6 +161,8 @@ def sync_job_postings() -> dict:
         with conn.cursor() as cursor:
             cursor.executemany(UPSERT_LIST_SQL, [_row_list(item) for item in all_items])
             cursor.executemany(UPSERT_DETAIL_SQL, [_row_detail(item) for item in all_items])
+            today = date.today()
+            cursor.execute(REFRESH_STATUS_SQL, (today, today + timedelta(days=7)))
         conn.commit()
     finally:
         conn.close()
