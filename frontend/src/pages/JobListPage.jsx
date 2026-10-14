@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import '../App.css'
 import JobDetail from '../JobDetail'
 import { getToken } from '../utils/authUtils'
@@ -131,6 +132,12 @@ export default function JobListPage() {
               <h1 className="page-title">공공기관 채용공고 목록 조회</h1>
               <div className="title-badges">
                 <span className="badge badge-total">총 {totalCount.toLocaleString()}건</span>
+                {/* TEMP: 영상 촬영용 임시 숨김 — 끝나면 이 주석 해제 */}
+                {false && (
+                  <Link to="/jobs/calendar" className="badge" style={{ textDecoration: 'none' }}>
+                    📅 마감 캘린더로 보기
+                  </Link>
+                )}
               </div>
             </div>
 

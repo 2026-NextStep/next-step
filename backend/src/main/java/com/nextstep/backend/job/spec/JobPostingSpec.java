@@ -5,11 +5,14 @@ import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 
 public class JobPostingSpec {
 
     private static final Specification<JobPosting> ALL = (root, query, cb) -> cb.conjunction();
+    private static final DateTimeFormatter MONTH_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM");
 
     /**
      * 공백으로 구분된 각 토큰이 제목/기관명/채용분야 중 하나에는 포함되도록 AND 매칭.
@@ -70,6 +73,23 @@ public class JobPostingSpec {
         return (root, query, cb) -> cb.or(
             cb.isNull(root.get("endDate")),
             cb.greaterThanOrEqualTo(root.get("endDate"), today)
+        );
+    }
+
+    /** month는 "yyyy-MM" 형식. 마감일(endDate)이 해당 월에 속하는 공고만 조회 (캘린더 뷰용). */
+    public static Specification<JobPosting> endDateInMonth(String month) {
+        if (month == null || month.isBlank()) return ALL;
+        YearMonth yearMonth;
+        try {
+            yearMonth = YearMonth.parse(month, MONTH_FORMAT);
+        } catch (Exception e) {
+            return ALL;
+        }
+        LocalDate from = yearMonth.atDay(1);
+        LocalDate to = yearMonth.plusMonths(1).atDay(1);
+        return (root, query, cb) -> cb.and(
+            cb.greaterThanOrEqualTo(root.get("endDate"), from),
+            cb.lessThan(root.get("endDate"), to)
         );
     }
 

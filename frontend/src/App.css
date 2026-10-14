@@ -400,6 +400,9 @@
   font-size: 12px;
   color: #9ca3af;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 380px;
 }
 
 .org-cell {
@@ -407,6 +410,9 @@
   color: #374151;
   font-weight: 500;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
 }
 
 .field-cell {

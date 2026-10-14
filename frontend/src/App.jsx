@@ -9,6 +9,7 @@ import Login from './pages/Login'
 import Signup from './pages/Signup'
 import KakaoCallback from './pages/KakaoCallback'
 import JobListPage from './pages/JobListPage'
+import JobCalendarPage from './pages/JobCalendarPage'
 import InfoListPage from './pages/InfoListPage'
 import InfoDetailPage from './pages/InfoDetailPage'
 import Community from './pages/Community'
@@ -36,6 +37,7 @@ const router = createBrowserRouter([
       { path: '/contract/upload', element: <PrivateRoute><ContractUploadPage /></PrivateRoute> },
       { path: '/contract/result/:id', element: <PrivateRoute><ContractResultPage /></PrivateRoute> },
       { path: '/jobs',          element: <JobListPage /> },
+      { path: '/jobs/calendar', element: <JobCalendarPage /> },
       { path: '/jobs/:id',      element: <JobDetailPage /> },
       { path: '/jobs/:id/ai',   element: <PrivateRoute><JobAIPage /></PrivateRoute> },
       { path: '/chatbot',              element: <CoverLetterManage /> },
