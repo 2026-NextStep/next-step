@@ -4,16 +4,19 @@ import { isLoggedIn } from '../utils/authUtils'
 import {
   getPromotionBanner,
   getLatestPostings,
+  getPopularPostings,
   getAISummaryPostings,
   getLatestInfo,
 } from '../api/home'
 import PromotionBanner from '../components/home/PromotionBanner'
 import JobPostingCard from '../components/home/JobPostingCard'
+import PopularJobsWidget from '../components/home/PopularJobsWidget'
 import BookmarkedJobCard from '../components/mypage/BookmarkedJobCard'
 import InfoSummaryCard from '../components/home/InfoSummaryCard'
 import SectionHeader from '../components/home/SectionHeader'
 import LockedSection from '../components/home/LockedSection'
 import HomeEmptySection from '../components/home/HomeEmptySection'
+import RecommendedInfoSection from '../components/info/RecommendedInfoSection'
 
 // 비로그인 시 섹션 3 블러용 더미 데이터
 const DUMMY_AI_POSTINGS = [
@@ -55,6 +58,7 @@ export default function HomePage() {
 
   const [banner, setBanner] = useState(null)
   const [latestPostings, setLatestPostings] = useState([])
+  const [popularPostings, setPopularPostings] = useState([])
   const [aiPostings, setAiPostings] = useState([])
   const [latestInfo, setLatestInfo] = useState([])
   const [loading, setLoading] = useState(true)
@@ -77,6 +81,7 @@ export default function HomePage() {
     const always = [
       getPromotionBanner().then(setBanner).catch(() => {}),
       getLatestPostings().then(setLatestPostings).catch(() => setLatestPostings([])),
+      getPopularPostings().then(setPopularPostings).catch(() => setPopularPostings([])),
     ]
     const whenLoggedIn = loggedIn
       ? [
@@ -104,7 +109,15 @@ export default function HomePage() {
         {banner && <PromotionBanner banner={banner} />}
       </div>
 
-      {/* ── 영역 2: 최신 채용 공고 ────────────────────────── */}
+      {/* ── 영역 2: 지금 핫한 공고 (스크랩 많은 순) ──────── */}
+      {popularPostings.length > 0 && (
+        <div className="max-w-7xl mx-auto px-6 pb-16">
+          <SectionHeader title="🔥 지금 핫한 공고" linkTo="/jobs" />
+          <PopularJobsWidget jobs={popularPostings} />
+        </div>
+      )}
+
+      {/* ── 영역 3: 최신 채용 공고 ────────────────────────── */}
       <div className="max-w-7xl mx-auto px-6 pb-16">
         <SectionHeader title="최신 채용 공고" linkTo="/jobs" />
         {latestPostings.length === 0 ? (
@@ -154,7 +167,14 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* ── 영역 4: 최신 직업/기업 정보 AI 요약 ──────────── */}
+      {/* ── 영역 4: 희망직무 기반 맞춤 소식 (로그인 시) ───── */}
+      {loggedIn && (
+        <div className="max-w-7xl mx-auto px-6 pt-16">
+          <RecommendedInfoSection />
+        </div>
+      )}
+
+      {/* ── 영역 5: 최신 직업/기업 정보 AI 요약 ──────────── */}
       <div className="max-w-7xl mx-auto px-6 py-16 pb-24">
         <SectionHeader title="최신 직업/기업 정보 AI 요약" linkTo="/info" />
         {loggedIn ? (

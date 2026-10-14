@@ -33,6 +33,9 @@ public class LatestInfo {
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "category", length = 50, nullable = false)
+    private String category;
+
     public Long getId()               { return id; }
     public String getTitle()          { return title; }
     public String getSubTitle()       { return subTitle; }
@@ -41,4 +44,5 @@ public class LatestInfo {
     public String getAiTodayBrief()   { return aiTodayBrief; }
     public String getAiAction()       { return aiAction; }
     public LocalDateTime getCreatedAt(){ return createdAt; }
+    public String getCategory()       { return category; }
 }
