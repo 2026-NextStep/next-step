@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import RelatedJobsSection from '../components/info/RelatedJobsSection'
+
+const SHOW_RELATED_JOBS = false
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 
@@ -131,6 +134,8 @@ export default function InfoDetailPage() {
               </div>
             )}
 
+            {/* 관련 채용공고 */}
+            {SHOW_RELATED_JOBS && <RelatedJobsSection infoId={id} />}
 
           </div>
 

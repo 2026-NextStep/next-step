@@ -1,9 +1,11 @@
 package com.nextstep.backend.email.service;
 
+import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -37,6 +39,16 @@ public class EmailService {
                 "인증코드는 5분간 유효합니다.\n" +
                 "본인이 요청하지 않은 경우 이 메일을 무시하세요."
         );
+        mailSender.send(message);
+    }
+
+    public void sendDeadlineAlert(String email, String subject, String htmlBody) throws Exception {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
+        helper.setFrom(fromEmail);
+        helper.setTo(email);
+        helper.setSubject(subject);
+        helper.setText(htmlBody, true);
         mailSender.send(message);
     }
 

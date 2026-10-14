@@ -12,6 +12,7 @@ public class LatestInfoListDto {
     private String aiSummary3lines;
     private String aiFullSummary;
     private String createdAt;
+    private String category;
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd");
 
@@ -23,6 +24,7 @@ public class LatestInfoListDto {
         dto.aiSummary3lines = e.getAiSummary3lines();
         dto.aiFullSummary   = e.getAiFullSummary();
         dto.createdAt       = e.getCreatedAt() != null ? e.getCreatedAt().format(FORMATTER) : "";
+        dto.category        = e.getCategory();
         return dto;
     }
 
@@ -32,4 +34,5 @@ public class LatestInfoListDto {
     public String getAiSummary3lines(){ return aiSummary3lines; }
     public String getAiFullSummary()  { return aiFullSummary; }
     public String getCreatedAt()      { return createdAt; }
+    public String getCategory()       { return category; }
 }

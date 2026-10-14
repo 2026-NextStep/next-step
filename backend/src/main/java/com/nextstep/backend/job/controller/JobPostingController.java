@@ -42,6 +42,18 @@ public class JobPostingController {
         return service.getJobs(page, size, search, employment, region, status, quickFilter, sort, memberId);
     }
 
+    @GetMapping("/jobs/popular")
+    public List<JobPostingDto> getPopularJobs(@RequestParam(defaultValue = "10") int limit) {
+        Long memberId = securityUtil.getCurrentMemberIdOrNull();
+        return service.getPopularJobs(limit, memberId);
+    }
+
+    @GetMapping("/jobs/calendar")
+    public List<JobPostingDto> getCalendarJobs(@RequestParam String month) {
+        Long memberId = securityUtil.getCurrentMemberIdOrNull();
+        return service.getCalendarJobs(month, memberId);
+    }
+
     @GetMapping("/jobs/{id}/bookmark")
     public ResponseEntity<Map<String, Object>> checkBookmark(@PathVariable Long id) {
         Long memberId = securityUtil.getCurrentMemberIdOrNull();

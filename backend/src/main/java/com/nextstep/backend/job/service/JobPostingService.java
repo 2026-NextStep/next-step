@@ -44,8 +44,8 @@ public class JobPostingService {
                                        Long memberId) {
         Sort sortOrder = switch (sort) {
             case "마감일순" -> Sort.by(Sort.Direction.ASC, "endDate");
-            case "조회수순" -> Sort.by(Sort.Direction.DESC, "scrapCount");
-            default        -> Sort.by(Sort.Direction.DESC, "createdAt");
+            case "조회수순" -> Sort.by(Sort.Direction.DESC, "viewCount");
+            default        -> Sort.by(Sort.Direction.DESC, "startDate");
         };
 
         PageRequest pageable = PageRequest.of(page, size, sortOrder);
@@ -55,7 +55,8 @@ public class JobPostingService {
             .and(JobPostingSpec.employmentType(employment))
             .and(JobPostingSpec.workLocation(region))
             .and(JobPostingSpec.statusFilter(status))
-            .and(JobPostingSpec.quickFilter(quickFilter));
+            .and(JobPostingSpec.quickFilter(quickFilter))
+            .and(JobPostingSpec.excludeExpiredUnless(status));
 
         Set<Long> bookmarkedIds = (memberId != null)
                 ? bookmarkRepository.findPostingIdSetByMemberId(memberId)
@@ -63,6 +64,36 @@ public class JobPostingService {
 
         return repository.findAll(spec, pageable)
                 .map(job -> JobPostingDto.from(job, bookmarkedIds.contains(job.getPostingId())));
+    }
+
+    /** 스크랩수 상위 N개 (마감 지난 공고, 스크랩 0건 제외). 홈 화면 인기 공고 위젯용. */
+    public List<JobPostingDto> getPopularJobs(int limit, Long memberId) {
+        Specification<JobPosting> spec = Specification
+            .where(JobPostingSpec.excludeExpiredUnless(null))
+            .and((root, query, cb) -> cb.greaterThan(root.get("scrapCount"), 0));
+
+        PageRequest pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "scrapCount"));
+
+        Set<Long> bookmarkedIds = (memberId != null)
+                ? bookmarkRepository.findPostingIdSetByMemberId(memberId)
+                : Collections.emptySet();
+
+        return repository.findAll(spec, pageable)
+                .map(job -> JobPostingDto.from(job, bookmarkedIds.contains(job.getPostingId())))
+                .getContent();
+    }
+
+    /** month("yyyy-MM") 기준 마감일이 그 달에 속하는 공고 전체. 마감 캘린더 뷰용. */
+    public List<JobPostingDto> getCalendarJobs(String month, Long memberId) {
+        Specification<JobPosting> spec = Specification.where(JobPostingSpec.endDateInMonth(month));
+
+        Set<Long> bookmarkedIds = (memberId != null)
+                ? bookmarkRepository.findPostingIdSetByMemberId(memberId)
+                : Collections.emptySet();
+
+        return repository.findAll(spec, Sort.by(Sort.Direction.ASC, "endDate")).stream()
+                .map(job -> JobPostingDto.from(job, bookmarkedIds.contains(job.getPostingId())))
+                .collect(Collectors.toList());
     }
 
     public JobPostingDetailDto getJobDetail(Long id) {

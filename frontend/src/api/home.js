@@ -23,6 +23,22 @@ export async function getLatestPostings() {
   }))
 }
 
+export async function getPopularPostings() {
+  const { data } = await axiosInstance.get('/jobs/popular', {
+    params: { limit: 5 },
+  })
+  return data.map((job) => ({
+    postingId: job.id,
+    title: job.title,
+    companyName: job.org,
+    location: job.workLocation,
+    status: job.status,
+    endDate: job.end,
+    employmentType: job.employmentType,
+    scrapCount: job.views,
+  }))
+}
+
 export async function getAISummaryPostings() {
   const { data } = await axiosInstance.get('/users/me/ai-analyses')
   return data
