@@ -25,12 +25,12 @@ public class ContractController {
 
     @GetMapping("/{contractId}/analysis")
     public ResponseEntity<ContractAnalysisResponse> getAnalysis(@PathVariable Long contractId) {
-        return ResponseEntity.ok(contractService.getContractAnalysis(contractId));
+        return ResponseEntity.ok(contractService.getContractAnalysis(contractId, securityUtil.getCurrentMemberId()));
     }
 
     @DeleteMapping("/{contractId}")
     public ResponseEntity<Void> deleteContract(@PathVariable Long contractId) {
-        contractService.deleteContract(contractId);
+        contractService.deleteContract(contractId, securityUtil.getCurrentMemberId());
         return ResponseEntity.noContent().build();
     }
 }

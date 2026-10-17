@@ -65,12 +65,13 @@ public class ContractService {
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public ContractAnalysisResponse getContractAnalysis(Long contractId) {
+    public ContractAnalysisResponse getContractAnalysis(Long contractId, Long memberId) {
         Object lock = ANALYSIS_LOCKS.computeIfAbsent(contractId, k -> new Object());
         synchronized (lock) {
             try {
                 ContractDocument contract = contractDocumentRepository.findById(contractId)
                         .orElseThrow(() -> new IllegalArgumentException("계약서를 찾을 수 없습니다"));
+                validateOwner(contract, memberId);
 
                 // 캐시 확인: 이미 분석된 결과가 있으면 DB에서 바로 반환
                 if (contract.getAnalyzedAt() != null
@@ -107,12 +108,19 @@ public class ContractService {
         }
     }
 
-    public void deleteContract(Long contractId) {
+    public void deleteContract(Long contractId, Long memberId) {
         ContractDocument contract = contractDocumentRepository.findById(contractId)
                 .orElseThrow(() -> new IllegalArgumentException("계약서를 찾을 수 없습니다"));
+        validateOwner(contract, memberId);
         fileStorageService.deleteFile(contract.getFilePath());
         contractDocumentRepository.delete(contract);
         log.info("계약서 {} 삭제 완료", contractId);
+    }
+
+    private void validateOwner(ContractDocument contract, Long memberId) {
+        if (!contract.getMember().getMemberId().equals(memberId)) {
+            throw new IllegalStateException("본인의 계약서만 조회/삭제할 수 있습니다.");
+        }
     }
 
     private byte[] readFileBytes(String filePath) {
