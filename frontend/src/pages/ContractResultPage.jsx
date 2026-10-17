@@ -369,7 +369,7 @@ export default function ContractResultPage() {
     : '분석 결과를 저장하지 않으셨어요'
 
   const leaveModalMessage = hasPdfSaved
-    ? 'PDF는 저장되었습니다.\n이 페이지를 벗어나면 서버의 분석 결과는\n즉시 삭제됩니다.'
+    ? 'PDF는 저장되었습니다.\n서버에 저장된 분석 결과는 보안을 위해\n업로드 후 최대 2시간 내에 자동 삭제됩니다.'
     : '이 페이지를 벗어나면 분석 결과가\n영구적으로 삭제됩니다.\n\n결과를 보관하시려면 "PDF로 저장"을\n먼저 진행해 주세요.'
 
   const risk = RISK_CONFIG[data.overallRiskLevel] ?? RISK_CONFIG.MEDIUM
