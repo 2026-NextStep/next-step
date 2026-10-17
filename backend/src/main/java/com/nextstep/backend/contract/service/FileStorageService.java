@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -21,6 +22,14 @@ public class FileStorageService {
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("pdf", "jpg", "jpeg", "png");
     private static final String BASE_DIR = "uploads/contracts";
 
+    // 확장자별 실제 파일 시그니처(매직넘버) — 확장자만 바꾼 위장 파일을 걸러내기 위함
+    private static final Map<String, byte[]> MAGIC_NUMBERS = Map.of(
+            "pdf", new byte[]{0x25, 0x50, 0x44, 0x46},
+            "jpg", new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF},
+            "jpeg", new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF},
+            "png", new byte[]{(byte) 0x89, 0x50, 0x4E, 0x47}
+    );
+
     public String storeFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("파일이 비어있습니다");
@@ -31,9 +40,20 @@ public class FileStorageService {
         }
 
         String originalFilename = file.getOriginalFilename();
-        String extension = extractExtension(originalFilename);
+        String extension = extractExtension(originalFilename).toLowerCase();
 
-        if (!ALLOWED_EXTENSIONS.contains(extension.toLowerCase())) {
+        if (!ALLOWED_EXTENSIONS.contains(extension)) {
+            throw new IllegalArgumentException("PDF, JPG, PNG 파일만 업로드 가능합니다");
+        }
+
+        byte[] fileBytes;
+        try {
+            fileBytes = file.getBytes();
+        } catch (IOException e) {
+            throw new RuntimeException("파일 저장 중 오류가 발생했습니다", e);
+        }
+
+        if (!hasValidSignature(extension, fileBytes)) {
             throw new IllegalArgumentException("PDF, JPG, PNG 파일만 업로드 가능합니다");
         }
 
@@ -47,7 +67,7 @@ public class FileStorageService {
         try {
             Files.createDirectories(absoluteDirPath);
             Path absoluteFilePath = absoluteDirPath.resolve(storedFilename);
-            file.transferTo(absoluteFilePath.toFile());
+            Files.write(absoluteFilePath, fileBytes);
         } catch (IOException e) {
             throw new RuntimeException("파일 저장 중 오류가 발생했습니다", e);
         }
@@ -71,6 +91,19 @@ public class FileStorageService {
         } catch (IOException e) {
             log.error("파일 삭제 실패: {}", absoluteFilePath, e);
         }
+    }
+
+    private boolean hasValidSignature(String extension, byte[] fileBytes) {
+        byte[] magicNumber = MAGIC_NUMBERS.get(extension);
+        if (magicNumber == null || fileBytes.length < magicNumber.length) {
+            return false;
+        }
+        for (int i = 0; i < magicNumber.length; i++) {
+            if (fileBytes[i] != magicNumber[i]) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private String extractExtension(String filename) {
