@@ -1,8 +1,16 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { isLoggedIn } from '../utils/authUtils'
+import RecommendedInfoSection from '../components/info/RecommendedInfoSection'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 const PAGE_SIZE = 4
+const CATEGORIES = ['공기업 채용 동향', '대기업 채용 소식', 'IT·스타트업 채용 트렌드', '취업시장 동향', '취업 전략']
+
+function currentYearMonth() {
+  const now = new Date()
+  return { year: now.getFullYear(), month: now.getMonth() + 1 }
+}
 
 function BriefingIcon() {
   return (
@@ -21,10 +29,19 @@ export default function InfoListPage() {
   const [posts, setPosts] = useState([])
   const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
+  const [category, setCategory] = useState('')
+  const [yearMonth, setYearMonth] = useState(currentYearMonth)
+
+  const monthParam = `${yearMonth.year}-${String(yearMonth.month).padStart(2, '0')}`
+  const isCurrentMonth = (() => {
+    const now = currentYearMonth()
+    return yearMonth.year === now.year && yearMonth.month === now.month
+  })()
 
   useEffect(() => {
     setLoading(true)
-    fetch(`${API_BASE}/api/v1/latest-info?page=${page}&size=${PAGE_SIZE}`)
+    const params = new URLSearchParams({ page, size: PAGE_SIZE, category, month: monthParam })
+    fetch(`${API_BASE}/api/v1/latest-info?${params}`)
       .then(r => r.json())
       .then(data => {
         setPosts(data.content || [])
@@ -32,7 +49,23 @@ export default function InfoListPage() {
         setLoading(false)
       })
       .catch(() => setLoading(false))
-  }, [page])
+  }, [page, category, monthParam])
+
+  const handleCategoryClick = (c) => {
+    setCategory(prev => prev === c ? '' : c)
+    setPage(0)
+  }
+
+  const goPrevMonth = () => {
+    setYearMonth(({ year, month }) => month === 1 ? { year: year - 1, month: 12 } : { year, month: month - 1 })
+    setPage(0)
+  }
+
+  const goNextMonth = () => {
+    if (isCurrentMonth) return
+    setYearMonth(({ year, month }) => month === 12 ? { year: year + 1, month: 1 } : { year, month: month + 1 })
+    setPage(0)
+  }
 
   const windowSize = 5
   const half = Math.floor(windowSize / 2)
@@ -63,6 +96,53 @@ export default function InfoListPage() {
           <h1 className="text-2xl font-bold text-gray-900 leading-snug">
             구직자 입장에서 바로 도움이 되는 채용 시장 흐름과 기업 소식을<br />한곳에서 볼 수 있게 정리했어요.
           </h1>
+        </div>
+
+        {/* 희망직무 기반 맞춤 소식 */}
+        {isLoggedIn() && (
+          <div className="bg-white rounded-2xl border border-gray-100 px-8 py-7 mb-6 shadow-sm">
+            <RecommendedInfoSection />
+          </div>
+        )}
+
+        {/* 필터 */}
+        <div className="bg-white rounded-2xl border border-gray-100 px-6 py-4 mb-6 shadow-sm flex flex-wrap items-center gap-4">
+          <div className="flex flex-wrap gap-2">
+            {CATEGORIES.map(c => (
+              <button
+                key={c}
+                onClick={() => handleCategoryClick(c)}
+                className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
+                  category === c
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-gray-500 border-gray-200 hover:border-blue-300'
+                }`}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+          <div className="w-px h-5 bg-gray-200 hidden sm:block" />
+          <div className="flex items-center gap-3 shrink-0">
+            <button
+              onClick={goPrevMonth}
+              aria-label="이전 달"
+              className="w-7 h-7 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 transition-colors"
+            >
+              ‹
+            </button>
+            <span className="text-sm font-semibold text-gray-800 w-24 text-center whitespace-nowrap">
+              {yearMonth.year}년 {yearMonth.month}월
+            </span>
+            <button
+              onClick={goNextMonth}
+              disabled={isCurrentMonth}
+              aria-label="다음 달"
+              className="w-7 h-7 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+            >
+              ›
+            </button>
+          </div>
         </div>
 
         {/* Content + Sidebar */}

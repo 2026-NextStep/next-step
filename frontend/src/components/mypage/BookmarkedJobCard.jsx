@@ -4,17 +4,24 @@ export default function BookmarkedJobCard({ posting, onClick, showBookmark = tru
       className="bg-white border border-gray-100 rounded-xl p-4 flex flex-col gap-3 cursor-pointer hover:shadow-md transition-shadow"
       onClick={onClick}
     >
-      {/* D-day 뱃지 + 북마크 아이콘 */}
+      {/* D-day 뱃지 + 알림 발송 표시 + 북마크 아이콘 */}
       <div className="flex items-center justify-between">
-        {posting.isAlwaysRecruiting ? (
-          <span className="text-xs font-semibold text-gray-400 bg-gray-100 px-2.5 py-0.5 rounded">
-            상시채용
-          </span>
-        ) : (
-          <span className="text-xs font-bold text-red-500 bg-red-50 px-2.5 py-0.5 rounded">
-            D-{posting.dDay}
-          </span>
-        )}
+        <div className="flex items-center gap-1.5">
+          {posting.isAlwaysRecruiting ? (
+            <span className="text-xs font-semibold text-gray-400 bg-gray-100 px-2.5 py-0.5 rounded">
+              상시채용
+            </span>
+          ) : (
+            <span className="text-xs font-bold text-red-500 bg-red-50 px-2.5 py-0.5 rounded">
+              D-{posting.dDay}
+            </span>
+          )}
+          {posting.deadlineAlertSent && (
+            <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded flex items-center gap-0.5">
+              🔔 알림 발송됨
+            </span>
+          )}
+        </div>
         {showBookmark && (
           <button
             type="button"

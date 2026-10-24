@@ -4,9 +4,11 @@ import com.nextstep.backend.info.dto.LatestInfoDetailDto;
 import com.nextstep.backend.info.dto.LatestInfoListDto;
 import com.nextstep.backend.info.entity.LatestInfo;
 import com.nextstep.backend.info.repository.LatestInfoRepository;
+import com.nextstep.backend.info.spec.LatestInfoSpec;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -20,9 +22,12 @@ public class LatestInfoService {
         this.repository = repository;
     }
 
-    public Page<LatestInfoListDto> getList(int page, int size) {
+    public Page<LatestInfoListDto> getList(int page, int size, String category, String month) {
         PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return repository.findAll(pageable).map(LatestInfoListDto::from);
+        Specification<LatestInfo> spec = Specification
+                .where(LatestInfoSpec.category(category))
+                .and(LatestInfoSpec.month(month));
+        return repository.findAll(spec, pageable).map(LatestInfoListDto::from);
     }
 
     public LatestInfoDetailDto getDetail(Long id) {
