@@ -21,7 +21,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -52,12 +55,29 @@ public class ContractService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다"));
 
+        String fileHash = computeFileHash(file);
+
+        Optional<ContractDocument> existing = contractDocumentRepository
+                .findFirstByMember_MemberIdAndFileHashAndUploadedAtAfterOrderByUploadedAtDesc(
+                        memberId, fileHash, activeCutoff());
+
+        if (existing.isPresent()) {
+            ContractDocument contract = existing.get();
+            log.info("동일 해시의 활성 계약서 발견, 재분석 생략 — contractId={}", contract.getContractId());
+            return ContractUploadResponse.builder()
+                    .contractId(contract.getContractId())
+                    .fileName(contract.getFileName())
+                    .message("이미 분석한 동일한 계약서입니다. 기존 분석 결과를 불러옵니다.")
+                    .build();
+        }
+
         String filePath = fileStorageService.storeFile(file);
 
         ContractDocument contract = ContractDocument.builder()
                 .member(member)
                 .filePath(filePath)
                 .fileName(file.getOriginalFilename())
+                .fileHash(fileHash)
                 .build();
 
         ContractDocument saved = contractDocumentRepository.save(contract);
@@ -129,11 +149,26 @@ public class ContractService {
             return Optional.empty();
         }
         ContractDocument latest = contracts.get(0);
-        LocalDateTime cutoff = LocalDateTime.now().minusHours(ContractDocument.RETENTION_HOURS);
-        if (latest.getUploadedAt().isAfter(cutoff)) {
+        if (latest.getUploadedAt().isAfter(activeCutoff())) {
             return Optional.of(latest.getContractId());
         }
         return Optional.empty();
+    }
+
+    private LocalDateTime activeCutoff() {
+        return LocalDateTime.now().minusHours(ContractDocument.RETENTION_HOURS);
+    }
+
+    private String computeFileHash(MultipartFile file) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(file.getBytes());
+            return HexFormat.of().formatHex(hash);
+        } catch (IOException e) {
+            throw new RuntimeException("파일을 읽을 수 없습니다", e);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("해시 계산 중 오류가 발생했습니다", e);
+        }
     }
 
     private void validateOwner(ContractDocument contract, Long memberId) {

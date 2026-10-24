@@ -184,4 +184,43 @@ class ContractApiTest {
                 .andExpect(jsonPath("$.contractId").value(30))
                 .andExpect(jsonPath("$.fileName").value("resume.pdf"));
     }
+
+    @Test
+    void reuploadingSameContentWithinActiveWindowReturnsExistingContract() throws Exception {
+        ContractDocument existing = contractOf(owner, 50L);
+        when(contracts.findFirstByMember_MemberIdAndFileHashAndUploadedAtAfterOrderByUploadedAtDesc(
+                eq(1L), any(), any())).thenReturn(Optional.of(existing));
+
+        MockMultipartFile file = new MockMultipartFile("file", "resume.pdf", "application/pdf", "dummy".getBytes());
+
+        mvc.perform(multipart("/api/v1/contracts/analyze").file(file))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.contractId").value(50))
+                .andExpect(jsonPath("$.fileName").value("x.pdf"));
+
+        verify(fileStorageService, never()).storeFile(any());
+        verify(contracts, never()).save(any());
+    }
+
+    @Test
+    void reuploadingSameContentAfterActiveWindowCreatesNewContract() throws Exception {
+        when(contracts.findFirstByMember_MemberIdAndFileHashAndUploadedAtAfterOrderByUploadedAtDesc(
+                eq(1L), any(), any())).thenReturn(Optional.empty());
+        when(fileStorageService.storeFile(any())).thenReturn("uploads/contracts/20260101/abc_resume.pdf");
+        when(contracts.save(any())).thenAnswer(invocation -> {
+            ContractDocument saved = invocation.getArgument(0);
+            ReflectionTestUtils.setField(saved, "contractId", 51L);
+            return saved;
+        });
+
+        MockMultipartFile file = new MockMultipartFile("file", "resume.pdf", "application/pdf", "dummy".getBytes());
+
+        mvc.perform(multipart("/api/v1/contracts/analyze").file(file))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.contractId").value(51))
+                .andExpect(jsonPath("$.fileName").value("resume.pdf"));
+
+        verify(fileStorageService).storeFile(any());
+        verify(contracts).save(any());
+    }
 }

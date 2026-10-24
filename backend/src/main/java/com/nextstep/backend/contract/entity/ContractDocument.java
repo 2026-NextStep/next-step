@@ -32,6 +32,9 @@ public class ContractDocument {
     @Column(name = "file_name", nullable = false, length = 255)
     private String fileName;
 
+    @Column(name = "file_hash", length = 64)
+    private String fileHash;
+
     @Lob
     @Column(name = "ocr_result", columnDefinition = "LONGTEXT")
     private String ocrResult;
@@ -63,10 +66,11 @@ public class ContractDocument {
     private LocalDateTime analyzedAt;
 
     @Builder
-    public ContractDocument(Member member, String filePath, String fileName) {
+    public ContractDocument(Member member, String filePath, String fileName, String fileHash) {
         this.member = member;
         this.filePath = filePath;
         this.fileName = fileName;
+        this.fileHash = fileHash;
     }
 
     @PrePersist
