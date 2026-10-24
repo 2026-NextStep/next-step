@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useBlocker } from 'react-router-dom'
 import { Loader2, Copy, Check, Download, ChevronDown, ChevronUp } from 'lucide-react'
-import { getContractAnalysis, deleteContract } from '../api/contract'
-import { getToken } from '../utils/authUtils'
+import { getContractAnalysis } from '../api/contract'
 import RiskItemCard from '../components/contract/RiskItemCard'
 import SummaryCard from '../components/contract/SummaryCard'
 import SalaryBreakdownTable from '../components/contract/SalaryBreakdownTable'
@@ -163,17 +162,14 @@ export default function ContractResultPage() {
   const [notFound, setNotFound] = useState(false)
   const [loadError, setLoadError] = useState(null)
   const [retryCount, setRetryCount] = useState(0)
-  const [isDeleting, setIsDeleting] = useState(false)
   const [showLeaveModal, setShowLeaveModal] = useState(false)
-  const [pendingAction, setPendingAction] = useState(null)
   const [showPdfGuideModal, setShowPdfGuideModal] = useState(false)
-  const [isLeaving, setIsLeaving] = useState(false)
-  const isLeavingRef = useRef(false)
   const [hasPdfSaved, setHasPdfSaved] = useState(false)
   const [isPrecautionsOpen, setIsPrecautionsOpen] = useState(false)
   const [isQuestionsOpen, setIsQuestionsOpen] = useState(false)
+  const isLeavingRef = useRef(false)
 
-  const shouldWarnBeforeLeave = !loading && !notFound && data && !isLeaving
+  const shouldWarnBeforeLeave = !loading && !notFound && !!data
 
   useEffect(() => {
     if (!id) return
@@ -213,20 +209,6 @@ export default function ContractResultPage() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [shouldWarnBeforeLeave])
 
-  useEffect(() => {
-    if (!shouldWarnBeforeLeave) return
-    const handlePageHide = () => {
-      // 탭 닫기/새로고침 시 best-effort 삭제 요청. axios는 keepalive를 지원하지 않아 fetch 사용.
-      fetch(`${import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api/v1'}/contracts/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${getToken()}` },
-        keepalive: true,
-      }).catch(() => {})
-    }
-    window.addEventListener('pagehide', handlePageHide)
-    return () => window.removeEventListener('pagehide', handlePageHide)
-  }, [shouldWarnBeforeLeave, id])
-
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
       shouldWarnBeforeLeave &&
@@ -238,60 +220,33 @@ export default function ContractResultPage() {
     if (blocker.state === 'blocked') {
       // 라우터 차단 상태를 확인 모달 상태와 동기화합니다.
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setPendingAction('navigate')
       setShowLeaveModal(true)
     }
   }, [blocker.state])
 
-  const performReupload = async () => {
-    setIsDeleting(true)
-    try {
-      await deleteContract(id)
-    } catch (error) {
-      console.error('계약서 삭제 실패:', error)
-    } finally {
-      isLeavingRef.current = true
-      setIsLeaving(true)
-      setShowLeaveModal(false)
-      setIsDeleting(false)
+  const handleReupload = () => {
+    if (shouldWarnBeforeLeave) {
+      setShowLeaveModal(true)
+    } else {
       navigate('/contract/upload')
     }
   }
 
-  const handleReupload = () => {
-    if (shouldWarnBeforeLeave) {
-      setPendingAction('reupload')
-      setShowLeaveModal(true)
-    } else {
-      performReupload()
-    }
-  }
-
-  const handleConfirmLeave = async () => {
-    if (pendingAction === 'reupload') {
-      await performReupload()
-    } else if (pendingAction === 'navigate' && blocker.state === 'blocked') {
-      setIsDeleting(true)
-      try {
-        await deleteContract(id)
-      } catch (error) {
-        console.error('계약서 삭제 실패:', error)
-      }
-      isLeavingRef.current = true
-      setIsLeaving(true)
-      setShowLeaveModal(false)
-      setIsDeleting(false)
+  const handleConfirmLeave = () => {
+    setShowLeaveModal(false)
+    isLeavingRef.current = true
+    if (blocker.state === 'blocked') {
       blocker.proceed()
+    } else {
+      navigate('/contract/upload')
     }
-    setPendingAction(null)
   }
 
   const handleCancelLeave = () => {
     setShowLeaveModal(false)
-    if (pendingAction === 'navigate' && blocker.state === 'blocked') {
+    if (blocker.state === 'blocked') {
       blocker.reset()
     }
-    setPendingAction(null)
   }
 
   const handlePdfSaveClick = () => {
@@ -369,8 +324,8 @@ export default function ContractResultPage() {
     : '분석 결과를 저장하지 않으셨어요'
 
   const leaveModalMessage = hasPdfSaved
-    ? 'PDF는 저장되었습니다.\n서버에 저장된 분석 결과는 보안을 위해\n업로드 후 최대 2시간 내에 자동 삭제됩니다.'
-    : '이 페이지를 벗어나면 분석 결과가\n영구적으로 삭제됩니다.\n\n결과를 보관하시려면 "PDF로 저장"을\n먼저 진행해 주세요.'
+    ? 'PDF는 저장되었습니다.\n서버에 저장된 분석 결과는 업로드 후\n최대 2시간 내에 자동 삭제됩니다.'
+    : '이 페이지를 벗어나도 분석 결과는 바로 삭제되지 않지만,\n업로드 후 최대 2시간이 지나면 서버에서 자동 삭제됩니다.\n\n결과를 보관하시려면 "PDF로 저장"을\n먼저 진행해 주세요.'
 
   const risk = RISK_CONFIG[data.overallRiskLevel] ?? RISK_CONFIG.MEDIUM
 
@@ -394,8 +349,7 @@ export default function ContractResultPage() {
             <button
               type="button"
               onClick={handleReupload}
-              disabled={isDeleting}
-              className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg bg-white hover:bg-gray-50 transition-colors"
             >
               다시 업로드
             </button>
@@ -649,7 +603,6 @@ export default function ContractResultPage() {
           onConfirm={handleConfirmLeave}
           onCancel={handleCancelLeave}
           variant="warning"
-          isLoading={isDeleting}
         />
 
         <ConfirmModal
