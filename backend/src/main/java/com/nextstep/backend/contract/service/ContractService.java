@@ -11,9 +11,11 @@ import com.nextstep.backend.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -70,7 +72,7 @@ public class ContractService {
         synchronized (lock) {
             try {
                 ContractDocument contract = contractDocumentRepository.findById(contractId)
-                        .orElseThrow(() -> new IllegalArgumentException("계약서를 찾을 수 없습니다"));
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "계약서를 찾을 수 없습니다"));
                 validateOwner(contract, memberId);
 
                 // 캐시 확인: 이미 분석된 결과가 있으면 DB에서 바로 반환
@@ -110,7 +112,7 @@ public class ContractService {
 
     public void deleteContract(Long contractId, Long memberId) {
         ContractDocument contract = contractDocumentRepository.findById(contractId)
-                .orElseThrow(() -> new IllegalArgumentException("계약서를 찾을 수 없습니다"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "계약서를 찾을 수 없습니다"));
         validateOwner(contract, memberId);
         fileStorageService.deleteFile(contract.getFilePath());
         contractDocumentRepository.delete(contract);

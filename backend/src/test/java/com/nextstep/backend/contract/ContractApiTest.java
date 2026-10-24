@@ -94,6 +94,13 @@ class ContractApiTest {
     }
 
     @Test
+    void viewingNonexistentContractIs404() throws Exception {
+        when(contracts.findById(99L)).thenReturn(Optional.empty());
+
+        mvc.perform(get("/api/v1/contracts/99/analysis")).andExpect(status().isNotFound());
+    }
+
+    @Test
     void ownerCanDeleteOwnContract() throws Exception {
         ContractDocument contract = contractOf(owner, 10L);
         when(contracts.findById(10L)).thenReturn(Optional.of(contract));
@@ -111,6 +118,16 @@ class ContractApiTest {
         when(contracts.findById(20L)).thenReturn(Optional.of(contract));
 
         mvc.perform(delete("/api/v1/contracts/20")).andExpect(status().isForbidden());
+
+        verify(fileStorageService, never()).deleteFile(any());
+        verify(contracts, never()).delete(any());
+    }
+
+    @Test
+    void deletingNonexistentContractIs404() throws Exception {
+        when(contracts.findById(99L)).thenReturn(Optional.empty());
+
+        mvc.perform(delete("/api/v1/contracts/99")).andExpect(status().isNotFound());
 
         verify(fileStorageService, never()).deleteFile(any());
         verify(contracts, never()).delete(any());
