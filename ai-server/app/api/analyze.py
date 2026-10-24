@@ -84,6 +84,9 @@ async def analyze_contract(file: UploadFile = File(...)) -> AnalyzeResponse:
 
     except HTTPException:
         raise
+    except gpt_service.GeminiUnavailableError as e:
+        logger.warning("Gemini 일시 과부하로 503 응답: %s", e)
+        raise HTTPException(status_code=503, detail=str(e))
     except Exception as e:
         logger.exception("분석 중 오류 발생: %s", e)
         raise HTTPException(status_code=500, detail=str(e))

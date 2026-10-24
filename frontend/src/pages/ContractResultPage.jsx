@@ -167,9 +167,20 @@ export default function ContractResultPage() {
   const [hasPdfSaved, setHasPdfSaved] = useState(false)
   const [isPrecautionsOpen, setIsPrecautionsOpen] = useState(false)
   const [isQuestionsOpen, setIsQuestionsOpen] = useState(false)
+  const [isTakingLonger, setIsTakingLonger] = useState(false)
   const isLeavingRef = useRef(false)
 
   const shouldWarnBeforeLeave = !loading && !notFound && !!data
+
+  useEffect(() => {
+    if (!loading) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsTakingLonger(false)
+      return
+    }
+    const timer = setTimeout(() => setIsTakingLonger(true), 10000)
+    return () => clearTimeout(timer)
+  }, [loading])
 
   useEffect(() => {
     if (!id) return
@@ -267,6 +278,9 @@ export default function ContractResultPage() {
       <div className="min-h-screen flex flex-col items-center justify-center gap-3 bg-gray-50">
         <Loader2 size={32} className="text-blue-400 animate-spin" />
         <p className="text-sm text-gray-400">분석 결과를 불러오는 중...</p>
+        {isTakingLonger && (
+          <p className="text-xs text-gray-400">예상보다 시간이 조금 걸리고 있어요. 조금만 더 기다려 주세요.</p>
+        )}
       </div>
     )
   }

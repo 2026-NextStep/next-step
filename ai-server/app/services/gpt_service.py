@@ -14,6 +14,12 @@ logger = logging.getLogger(__name__)
 
 MAX_OCR_CHARS = 3500
 
+_RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
+
+
+class GeminiUnavailableError(RuntimeError):
+    """Gemini API가 일시적으로 과부하 상태(429/5xx)일 때 발생한다."""
+
 _HANGUL = re.compile(r'[가-힣]')
 _ALPHA  = re.compile(r'[A-Za-z]')
 
@@ -167,7 +173,10 @@ async def analyze_contract(ocr_text: str) -> dict:
     except RuntimeError:
         raise
     except errors.APIError as e:
-        logger.error("Gemini API 호출 실패 — code=%s", getattr(e, "code", "unknown"))
+        code = getattr(e, "code", None)
+        logger.error("Gemini API 호출 실패 — code=%s", code if code is not None else "unknown")
+        if code in _RETRYABLE_STATUS_CODES:
+            raise GeminiUnavailableError("Gemini API가 일시적으로 과부하 상태입니다") from e
         raise RuntimeError("Gemini API 호출에 실패했습니다") from e
     except Exception as e:
         logger.exception("Gemini 계약서 분석 중 예상하지 못한 오류")

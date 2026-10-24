@@ -18,6 +18,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.util.retry.Retry;
 
 import java.time.Duration;
 
@@ -56,6 +57,12 @@ public class FastApiAnalysisProvider implements ContractAnalysisProvider {
                     .retrieve()
                     .bodyToMono(FastApiAnalyzeResponse.class)
                     .timeout(Duration.ofSeconds(timeoutSeconds))
+                    .retryWhen(Retry.fixedDelay(1, Duration.ofSeconds(3))
+                            .filter(throwable -> throwable instanceof WebClientResponseException wcre
+                                    && wcre.getStatusCode().value() == 503)
+                            .doBeforeRetry(signal -> log.warn(
+                                    "Gemini 일시 오류로 재시도 — contractId={}", contract.getContractId()))
+                            .onRetryExhaustedThrow((spec, signal) -> signal.failure()))
                     .block();
 
             if (response == null || !response.isSuccess()) {

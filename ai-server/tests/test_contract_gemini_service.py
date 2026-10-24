@@ -6,7 +6,7 @@ from unittest.mock import patch
 from google.genai import errors
 
 from app.core.config import settings
-from app.services.gpt_service import analyze_contract
+from app.services.gpt_service import GeminiUnavailableError, analyze_contract
 
 
 class _FakeAsyncClient:
@@ -78,10 +78,24 @@ class ContractGeminiServiceTest(unittest.IsolatedAsyncioTestCase):
                 await analyze_contract("contract text")
 
     async def test_gemini_api_failure_is_handled(self):
-        api_error = errors.ClientError(429, {"error": {"message": "rate limited"}})
+        api_error = errors.ClientError(400, {"error": {"message": "invalid request"}})
 
         with patch("app.services.gpt_service.genai.Client", side_effect=api_error):
             with self.assertRaisesRegex(RuntimeError, "Gemini API 호출에 실패했습니다"):
+                await analyze_contract("contract text")
+
+    async def test_gemini_overload_raises_unavailable_error(self):
+        api_error = errors.ClientError(429, {"error": {"message": "rate limited"}})
+
+        with patch("app.services.gpt_service.genai.Client", side_effect=api_error):
+            with self.assertRaises(GeminiUnavailableError):
+                await analyze_contract("contract text")
+
+    async def test_gemini_server_error_raises_unavailable_error(self):
+        api_error = errors.ServerError(503, {"error": {"message": "overloaded"}})
+
+        with patch("app.services.gpt_service.genai.Client", side_effect=api_error):
+            with self.assertRaises(GeminiUnavailableError):
                 await analyze_contract("contract text")
 
 
