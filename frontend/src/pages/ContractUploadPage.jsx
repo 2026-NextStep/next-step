@@ -280,7 +280,7 @@ export default function ContractUploadPage() {
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                   <polyline points="9 12 11 14 15 10" />
                 </svg>
-                업로드된 파일은 분석 결과 페이지를 벗어나면 즉시 파기됩니다.
+                업로드된 파일은 분석 완료 후 최대 2시간 내 자동으로 삭제됩니다
               </div>
               <div className="flex items-center gap-2.5 text-xs text-gray-500">
                 <svg
