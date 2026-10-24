@@ -48,3 +48,9 @@ export async function deleteContract(contractId) {
   if (USE_MOCK) return Promise.resolve()
   return axiosInstance.delete(`/contracts/${contractId}`)
 }
+
+export async function getActiveContract() {
+  if (USE_MOCK) return null
+  const response = await axiosInstance.get('/contracts/active')
+  return response.status === 204 ? null : response.data.contractId
+}

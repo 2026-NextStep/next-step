@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/v1/contracts")
 @RequiredArgsConstructor
@@ -32,5 +34,12 @@ public class ContractController {
     public ResponseEntity<Void> deleteContract(@PathVariable Long contractId) {
         contractService.deleteContract(contractId, securityUtil.getCurrentMemberId());
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/active")
+    public ResponseEntity<Map<String, Long>> getActiveContract() {
+        return contractService.getActiveContractId(securityUtil.getCurrentMemberId())
+                .map(contractId -> ResponseEntity.ok(Map.of("contractId", contractId)))
+                .orElseGet(() -> ResponseEntity.noContent().build());
     }
 }

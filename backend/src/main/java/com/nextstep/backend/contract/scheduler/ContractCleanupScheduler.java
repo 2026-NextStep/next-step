@@ -19,11 +19,9 @@ public class ContractCleanupScheduler {
     private final ContractDocumentRepository contractDocumentRepository;
     private final FileStorageService fileStorageService;
 
-    private static final long RETENTION_HOURS = 2;
-
     @Scheduled(cron = "0 0 * * * *")
     public void cleanupExpiredContracts() {
-        LocalDateTime cutoff = LocalDateTime.now().minusHours(RETENTION_HOURS);
+        LocalDateTime cutoff = LocalDateTime.now().minusHours(ContractDocument.RETENTION_HOURS);
         List<ContractDocument> expiredContracts = contractDocumentRepository.findByUploadedAtBefore(cutoff);
 
         for (ContractDocument contract : expiredContracts) {

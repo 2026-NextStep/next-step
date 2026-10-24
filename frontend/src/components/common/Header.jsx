@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import Logo from './Logo'
 import { isLoggedIn, clearAuth } from '../../utils/authUtils'
+import { getActiveContract } from '../../api/contract'
+
+const CONTRACT_UPLOAD_PATH = '/contract/upload'
 
 const TABS = [
   { label: '채용 공고',   to: '/jobs' },
   { label: '자소서 챗봇', to: '/chatbot' },
   { label: '취업 정보',   to: '/info' },
-  { label: '계약서 분석', to: '/contract/upload' },
+  { label: '계약서 분석', to: CONTRACT_UPLOAD_PATH },
   { label: '커뮤니티',    to: '/community' },
 ]
 
@@ -36,6 +39,20 @@ export default function Header() {
     return () => window.removeEventListener('storage', handleStorage)
   }, [])
 
+  const handleContractTabClick = async (e) => {
+    e.preventDefault()
+    if (!isLoggedIn()) {
+      navigate(CONTRACT_UPLOAD_PATH)
+      return
+    }
+    try {
+      const contractId = await getActiveContract()
+      navigate(contractId ? `/contract/result/${contractId}` : CONTRACT_UPLOAD_PATH)
+    } catch {
+      navigate(CONTRACT_UPLOAD_PATH)
+    }
+  }
+
   const handleLogout = () => {
     clearAuth()
     setLoggedIn(false)
@@ -58,6 +75,7 @@ export default function Header() {
             <NavLink
               key={tab.label}
               to={tab.to}
+              onClick={tab.to === CONTRACT_UPLOAD_PATH ? handleContractTabClick : undefined}
               className={({ isActive }) =>
                 isActive
                   ? `${TAB_BASE} text-blue-500 after:w-full`

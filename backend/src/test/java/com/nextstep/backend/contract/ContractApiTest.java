@@ -22,6 +22,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -131,6 +132,30 @@ class ContractApiTest {
 
         verify(fileStorageService, never()).deleteFile(any());
         verify(contracts, never()).delete(any());
+    }
+
+    @Test
+    void activeContractReturnsRecentUploadId() throws Exception {
+        ContractDocument contract = contractOf(owner, 40L);
+        ReflectionTestUtils.setField(contract, "uploadedAt", LocalDateTime.now().minusMinutes(30));
+        when(contracts.findByMember_MemberIdOrderByUploadedAtDesc(1L)).thenReturn(List.of(contract));
+
+        mvc.perform(get("/api/v1/contracts/active"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.contractId").value(40));
+    }
+
+    @Test
+    void activeContractIsEmptyWhenNoneOrExpired() throws Exception {
+        ContractDocument expired = contractOf(owner, 41L);
+        ReflectionTestUtils.setField(expired, "uploadedAt", LocalDateTime.now().minusHours(3));
+        when(contracts.findByMember_MemberIdOrderByUploadedAtDesc(1L)).thenReturn(List.of(expired));
+
+        mvc.perform(get("/api/v1/contracts/active")).andExpect(status().isNoContent());
+
+        when(contracts.findByMember_MemberIdOrderByUploadedAtDesc(1L)).thenReturn(List.of());
+
+        mvc.perform(get("/api/v1/contracts/active")).andExpect(status().isNoContent());
     }
 
     @Test

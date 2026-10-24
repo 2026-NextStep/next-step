@@ -21,7 +21,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -117,6 +120,20 @@ public class ContractService {
         fileStorageService.deleteFile(contract.getFilePath());
         contractDocumentRepository.delete(contract);
         log.info("계약서 {} 삭제 완료", contractId);
+    }
+
+    public Optional<Long> getActiveContractId(Long memberId) {
+        List<ContractDocument> contracts = contractDocumentRepository
+                .findByMember_MemberIdOrderByUploadedAtDesc(memberId);
+        if (contracts.isEmpty()) {
+            return Optional.empty();
+        }
+        ContractDocument latest = contracts.get(0);
+        LocalDateTime cutoff = LocalDateTime.now().minusHours(ContractDocument.RETENTION_HOURS);
+        if (latest.getUploadedAt().isAfter(cutoff)) {
+            return Optional.of(latest.getContractId());
+        }
+        return Optional.empty();
     }
 
     private void validateOwner(ContractDocument contract, Long memberId) {
