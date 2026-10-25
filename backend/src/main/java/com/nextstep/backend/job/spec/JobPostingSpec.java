@@ -98,6 +98,7 @@ public class JobPostingSpec {
         LocalDate today = LocalDate.now();
         return switch (filter) {
             case "신입 채용" -> (root, query, cb) -> cb.or(
+                cb.like(root.get("recruitType"), "%신입%"),
                 cb.like(root.get("jobTitle"), "%신입%"),
                 cb.like(root.get("recruitField"), "%신입%")
             );

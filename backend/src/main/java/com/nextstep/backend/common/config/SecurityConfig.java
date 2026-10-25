@@ -4,6 +4,7 @@ import com.nextstep.backend.jwt.JwtAuthFilter;
 import com.nextstep.backend.jwt.JwtUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -32,6 +33,9 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // 관리자 전용: 공고 상태 수동 변경, 마감 알림 메일 수동 발송
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/jobs/*/status").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/notifications/deadline-check").hasRole("ADMIN")
                         // TODO: JWT 통합 후 인증이 필요한 엔드포인트 지정으로 교체 (STEP 13)
                         .anyRequest().permitAll()
                 )
