@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@media print {
+  /* 인쇄 시 배경색 강제 (Tailwind 배경색 유지) */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* 페이지 여백 */
+  @page {
+    margin: 1.5cm;
+  }
+
+  /* 전체 배경 흰색으로 */
+  body {
+    background: white !important;
+  }
+
+  /* 카드/박스 페이지 중간에서 잘리지 않도록 */
+  .rounded-2xl,
+  .rounded-xl {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

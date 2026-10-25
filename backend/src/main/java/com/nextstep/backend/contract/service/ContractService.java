@@ -1,0 +1,195 @@
+package com.nextstep.backend.contract.service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nextstep.backend.contract.dto.ContractAnalysisResponse;
+import com.nextstep.backend.contract.dto.ContractUploadResponse;
+import com.nextstep.backend.contract.entity.ContractDocument;
+import com.nextstep.backend.contract.repository.ContractDocumentRepository;
+import com.nextstep.backend.member.entity.Member;
+import com.nextstep.backend.member.repository.MemberRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
+import java.util.HexFormat;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class ContractService {
+
+    private static final ConcurrentHashMap<Long, Object> ANALYSIS_LOCKS = new ConcurrentHashMap<>();
+
+    private static final Map<String, String> EXT_TO_MIME = Map.of(
+            "pdf",  "application/pdf",
+            "jpg",  "image/jpeg",
+            "jpeg", "image/jpeg",
+            "png",  "image/png"
+    );
+
+    private final ContractDocumentRepository contractDocumentRepository;
+    private final MemberRepository memberRepository;
+    private final FileStorageService fileStorageService;
+    private final ContractAnalysisProvider analysisProvider;
+    private final ObjectMapper objectMapper;
+
+    public ContractUploadResponse uploadContract(MultipartFile file, Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다"));
+
+        String fileHash = computeFileHash(file);
+
+        Optional<ContractDocument> existing = contractDocumentRepository
+                .findFirstByMember_MemberIdAndFileHashAndUploadedAtAfterOrderByUploadedAtDesc(
+                        memberId, fileHash, activeCutoff());
+
+        if (existing.isPresent()) {
+            ContractDocument contract = existing.get();
+            log.info("동일 해시의 활성 계약서 발견, 재분석 생략 — contractId={}", contract.getContractId());
+            return ContractUploadResponse.builder()
+                    .contractId(contract.getContractId())
+                    .fileName(contract.getFileName())
+                    .message("이미 분석한 동일한 계약서입니다. 기존 분석 결과를 불러옵니다.")
+                    .build();
+        }
+
+        String filePath = fileStorageService.storeFile(file);
+
+        ContractDocument contract = ContractDocument.builder()
+                .member(member)
+                .filePath(filePath)
+                .fileName(file.getOriginalFilename())
+                .fileHash(fileHash)
+                .build();
+
+        ContractDocument saved = contractDocumentRepository.save(contract);
+
+        return ContractUploadResponse.builder()
+                .contractId(saved.getContractId())
+                .fileName(saved.getFileName())
+                .message("업로드가 완료되었습니다")
+                .build();
+    }
+
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public ContractAnalysisResponse getContractAnalysis(Long contractId, Long memberId) {
+        Object lock = ANALYSIS_LOCKS.computeIfAbsent(contractId, k -> new Object());
+        synchronized (lock) {
+            try {
+                ContractDocument contract = contractDocumentRepository.findById(contractId)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "계약서를 찾을 수 없습니다"));
+                validateOwner(contract, memberId);
+
+                // 캐시 확인: 이미 분석된 결과가 있으면 DB에서 바로 반환
+                if (contract.getAnalyzedAt() != null
+                        && contract.getAnalysisResult() != null
+                        && !contract.getAnalysisResult().isBlank()) {
+                    log.info("캐시된 분석 결과 반환 — contractId={}", contractId);
+                    try {
+                        return objectMapper.readValue(contract.getAnalysisResult(), ContractAnalysisResponse.class);
+                    } catch (JsonProcessingException e) {
+                        log.error("캐시 역직렬화 실패, 재분석 진행 — contractId={}", contractId, e);
+                    }
+                }
+
+                // 캐시 없음: FastAPI 호출
+                byte[] fileBytes = readFileBytes(contract.getFilePath());
+                String mimeType = resolveMimeType(contract.getFileName());
+
+                log.info("FastAPI 분석 호출 — contractId={}, mimeType={}", contractId, mimeType);
+                ContractAnalysisResponse result = analysisProvider.analyze(contract, fileBytes, mimeType);
+
+                // 결과를 DB에 저장
+                try {
+                    contract.saveAnalysisResult(objectMapper.writeValueAsString(result));
+                    contractDocumentRepository.save(contract);
+                    log.info("분석 결과 DB 저장 완료 — contractId={}", contractId);
+                } catch (JsonProcessingException e) {
+                    log.error("분석 결과 JSON 직렬화 실패 — contractId={}", contractId, e);
+                }
+
+                return result;
+            } finally {
+                ANALYSIS_LOCKS.remove(contractId);
+            }
+        }
+    }
+
+    public void deleteContract(Long contractId, Long memberId) {
+        ContractDocument contract = contractDocumentRepository.findById(contractId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "계약서를 찾을 수 없습니다"));
+        validateOwner(contract, memberId);
+        fileStorageService.deleteFile(contract.getFilePath());
+        contractDocumentRepository.delete(contract);
+        log.info("계약서 {} 삭제 완료", contractId);
+    }
+
+    public Optional<Long> getActiveContractId(Long memberId) {
+        List<ContractDocument> contracts = contractDocumentRepository
+                .findByMember_MemberIdOrderByUploadedAtDesc(memberId);
+        if (contracts.isEmpty()) {
+            return Optional.empty();
+        }
+        ContractDocument latest = contracts.get(0);
+        if (latest.getUploadedAt().isAfter(activeCutoff())) {
+            return Optional.of(latest.getContractId());
+        }
+        return Optional.empty();
+    }
+
+    private LocalDateTime activeCutoff() {
+        return LocalDateTime.now().minusHours(ContractDocument.RETENTION_HOURS);
+    }
+
+    private String computeFileHash(MultipartFile file) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(file.getBytes());
+            return HexFormat.of().formatHex(hash);
+        } catch (IOException e) {
+            throw new RuntimeException("파일을 읽을 수 없습니다", e);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("해시 계산 중 오류가 발생했습니다", e);
+        }
+    }
+
+    private void validateOwner(ContractDocument contract, Long memberId) {
+        if (!contract.getMember().getMemberId().equals(memberId)) {
+            throw new IllegalStateException("본인의 계약서만 조회/삭제할 수 있습니다.");
+        }
+    }
+
+    private byte[] readFileBytes(String filePath) {
+        Path absolutePath = Paths.get(System.getProperty("user.dir"), filePath)
+                .toAbsolutePath().normalize();
+        try {
+            return Files.readAllBytes(absolutePath);
+        } catch (IOException e) {
+            throw new RuntimeException("계약서 파일을 읽을 수 없습니다: " + absolutePath, e);
+        }
+    }
+
+    private String resolveMimeType(String fileName) {
+        if (fileName == null || !fileName.contains(".")) return "application/pdf";
+        String ext = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
+        return EXT_TO_MIME.getOrDefault(ext, "application/pdf");
+    }
+}

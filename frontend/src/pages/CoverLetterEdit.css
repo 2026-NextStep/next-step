@@ -1,0 +1,440 @@
+/* ── 루트 ── */
+.cle-root {
+    min-height: 100vh;
+    background: #f7f8fa;
+    font-family: "Pretendard", "Noto Sans KR", sans-serif;
+    color: #1a1a1a;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── 전체 레이아웃: 메인 | AI패널 ── */
+.cle-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    flex: 1;
+    min-height: calc(100vh - 60px);
+}
+
+/* ════════════════════════════
+   중앙 메인
+════════════════════════════ */
+.cle-main {
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    overflow: hidden;
+}
+
+/* 상단 타이틀 바 */
+.cle-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 16px;
+}
+
+.cle-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #111;
+    margin: 0;
+    letter-spacing: -0.3px;
+}
+
+.cle-top-actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.cle-btn-export {
+    height: 38px;
+    padding: 0 16px;
+    background: #fff;
+    color: #555;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+.cle-btn-export:hover {
+    border-color: #888;
+    color: #111;
+}
+
+.cle-btn-save {
+    height: 38px;
+    padding: 0 16px;
+    background: #0b79ff;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+.cle-btn-save:hover {
+    background: #0b79ff;
+    opacity: 0.9;
+}
+
+/* 2단 패널 */
+.cle-panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    flex: 1;
+}
+
+/* 패널 공통 */
+.cle-panel {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 500px;
+}
+
+.cle-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 18px;
+    border-bottom: 1px solid #e9ecef;
+    background: #fafafa;
+    flex-shrink: 0;
+}
+
+.cle-panel-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #555;
+}
+
+.cle-panel-title--blue {
+    color: #0b79ff;
+}
+
+.cle-panel-sub {
+    font-size: 12px;
+    color: #aaa;
+    font-weight: 500;
+}
+
+.cle-edit-btn {
+    background: none;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+    cursor: pointer;
+    color: #888;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cle-edit-btn:hover {
+    background: #f1f5f9;
+    color: #0b79ff;
+    border-color: #0b79ff;
+}
+
+/* 원본 텍스트 */
+.cle-text-box {
+    flex: 1;
+    padding: 20px;
+    font-size: 14px;
+    line-height: 1.85;
+    color: #555;
+    white-space: pre-wrap;
+    overflow-y: auto;
+    background: #fff;
+}
+
+/* 편집 textarea */
+.cle-edit-area {
+    flex: 1;
+    padding: 20px;
+    border: none;
+    outline: none;
+    resize: none;
+    font-size: 14px;
+    line-height: 1.85;
+    color: #333;
+    font-family: inherit;
+    background: #fff;
+}
+
+/* ════════════════════════════
+   오른쪽 AI 패널
+════════════════════════════ */
+.cle-ai-panel {
+    background: #fff;
+    border-left: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.cle-ai-title {
+    padding: 18px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #111;
+    border-bottom: 1px solid #e9ecef;
+    flex-shrink: 0;
+}
+
+/* AI 채팅 영역 */
+.cle-ai-chat {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    word-break: break-word;
+}
+
+.cle-ai-bubble-wrap {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.cle-ai-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #eff6ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.cle-ai-bubble {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0 12px 12px 12px;
+    padding: 14px 16px;
+    font-size: 13px;
+    line-height: 1.75;
+    color: #444;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    flex: 1;
+}
+
+.cle-ai-bubble--loading {
+    background: #eff6ff;
+    border-radius: 10px;
+    padding: 14px 16px;
+    color: #0b79ff;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+/* AI 피드백 박스 */
+.ai-feedback-box {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.ai-feedback-box h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0b79ff;
+    margin: 0 0 10px;
+}
+
+.ai-feedback-box pre {
+    font-size: 13px;
+    line-height: 1.8;
+    color: #333;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    overflow-x: hidden;
+    margin: 0;
+    font-family: inherit;
+    max-width: 100%;
+}
+
+/* ── PDF 업로드 박스 ── */
+.cle-upload-box {
+    margin: 0 16px 16px;
+    padding: 18px 16px;
+    border: 2px dashed #d1d5db;
+    border-radius: 12px;
+    text-align: center;
+    background: #fafafa;
+    flex-shrink: 0;
+}
+
+.cle-upload-cloud {
+    font-size: 26px;
+    color: #0b79ff;
+    margin-bottom: 6px;
+}
+
+.cle-upload-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #222;
+    margin-bottom: 5px;
+}
+
+.cle-upload-desc {
+    font-size: 11px;
+    color: #888;
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
+
+.cle-upload-btn {
+    height: 34px;
+    padding: 0 20px;
+    background: #0b79ff;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-family: inherit;
+}
+
+.cle-upload-btn:hover {
+    background: #0b79ff;
+    opacity: 0.9;
+}
+
+/* 업로드된 파일 표시 */
+.cle-upload-file-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #eff6ff;
+    border-radius: 8px;
+    padding: 8px 12px;
+}
+
+.cle-upload-file-name {
+    flex: 1;
+    font-size: 12px;
+    color: #0b79ff;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+}
+
+.cle-upload-file-remove {
+    background: none;
+    border: none;
+    color: #999;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    transition: color 0.15s;
+}
+
+.cle-upload-file-remove:hover {
+    color: #ef4444;
+}
+
+/* ── 채팅 입력 ── */
+.cle-chat-input-wrap {
+    display: flex;
+    gap: 8px;
+    padding: 14px 16px;
+    border-top: 1px solid #e9ecef;
+    flex-shrink: 0;
+}
+
+.cle-chat-input {
+    flex: 1;
+    height: 40px;
+    padding: 0 14px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 20px;
+    font-size: 13px;
+    color: #333;
+    outline: none;
+    font-family: inherit;
+    background: #f8fafc;
+    transition: border-color 0.15s;
+    min-width: 0;
+}
+
+.cle-chat-input:focus {
+    border-color: #0b79ff;
+    background: #fff;
+}
+
+.cle-chat-input:disabled {
+    background: #f3f4f6;
+    color: #aaa;
+}
+
+.cle-send-btn {
+    width: 40px;
+    height: 40px;
+    background: #0b79ff;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cle-send-btn:hover {
+    background: #0b79ff;
+    opacity: 0.9;
+}
+
+.cle-send-btn:disabled {
+    background: #93c5fd;
+    cursor: not-allowed;
+}
+
+/* ── 반응형 ── */
+@media (max-width: 900px) {
+    .cle-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .cle-ai-panel {
+        border-left: none;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .cle-panels {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,344 @@
+/* signup.css */
+
+.su-body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: #ffffff;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+.su-main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 60px 24px 80px;
+    box-sizing: border-box;
+}
+
+/* ── 상단/하단 바 ── */
+
+.su-top-bar {
+    width: 32px;
+    height: 3px;
+    background: #0b79ff;
+    border-radius: 999px;
+    margin-bottom: 40px;
+}
+
+.su-bottom-bar {
+    width: 32px;
+    height: 3px;
+    background: #0b79ff;
+    border-radius: 999px;
+    margin-top: 48px;
+}
+
+/* ── 페이지 헤더 ── */
+
+.su-page-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.su-page-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #0b1220;
+    margin: 0 0 10px 0;
+}
+
+.su-page-subtitle {
+    font-size: 14px;
+    color: #97a0b5;
+    margin: 0;
+}
+
+/* ── 스텝 인디케이터 ── */
+
+.su-steps {
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 480px;
+    margin-bottom: 48px;
+}
+
+.su-step-wrapper {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+
+.su-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.su-step-line {
+    flex: 1;
+    height: 2px;
+    background: #e4e8f0;
+    transition: background 0.3s;
+    margin-bottom: 24px;
+}
+
+.su-step-line--completed {
+    background: #0b79ff;
+}
+
+.su-step-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 15px;
+    font-weight: 700;
+    background: #f0f5ff;
+    color: #97a0b5;
+    border: 2px solid #e4e8f0;
+    transition: all 0.3s;
+    box-sizing: border-box;
+}
+
+.su-step-circle--active {
+    background: #0b79ff;
+    color: #ffffff;
+    border-color: #0b79ff;
+}
+
+.su-step-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #97a0b5;
+    transition: color 0.3s;
+    white-space: nowrap;
+}
+
+.su-step-label--active {
+    color: #0b79ff;
+}
+
+/* ── 폼 ── */
+
+.su-form-container {
+    width: 100%;
+    max-width: 480px;
+}
+
+.su-form-group {
+    margin-bottom: 24px;
+}
+
+.su-form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #0b1220;
+    margin-bottom: 8px;
+}
+
+.su-form-input {
+    width: 100%;
+    height: 52px;
+    padding: 0 16px;
+    background: #ffffff;
+    border: 1px solid #e4e8f0;
+    border-radius: 8px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    color: #0b1220;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.su-form-input:focus {
+    border-color: #0b79ff;
+    box-shadow: 0 0 0 3px rgba(11, 121, 255, 0.12);
+}
+
+.su-form-input--error {
+    border-color: #ff3b30;
+    box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.12);
+}
+
+.su-form-input--flex {
+    flex: 1;
+}
+
+.su-form-input--placeholder {
+    color: #bdc4d2;
+}
+
+.su-form-hint {
+    font-size: 12px;
+    color: #97a0b5;
+    margin: 6px 0 0 0;
+}
+
+.su-error-message {
+    font-size: 12px;
+    font-weight: 500;
+    color: #ff3b30;
+    margin-top: 6px;
+    display: block;
+}
+
+/* ── 주소/직업 선택 행 ── */
+
+.su-address-row {
+    display: flex;
+    gap: 8px;
+}
+
+.su-btn-select {
+    height: 52px;
+    padding: 0 16px;
+    background: #ffffff;
+    border: 1px solid #e4e8f0;
+    border-radius: 8px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #0b1220;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color 0.2s, color 0.2s;
+    box-sizing: border-box;
+}
+
+.su-btn-select:hover {
+    border-color: #0b79ff;
+    color: #0b79ff;
+}
+
+/* ── 직업 드롭다운 ── */
+
+.su-job-dropdown {
+    margin-top: 8px;
+    border: 1px solid #e4e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.su-job-option {
+    padding: 12px 16px;
+    text-align: left;
+    border: none;
+    background: #ffffff;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    color: #0b1220;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.su-job-option--bordered {
+    border-bottom: 1px solid #f0f4f8;
+}
+
+.su-job-option:hover {
+    background: #f5f8ff;
+}
+
+/* ── 서비스 이용 목적 ── */
+
+.su-purpose-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.su-btn-purpose {
+    height: 44px;
+    padding: 0 20px;
+    background: #ffffff;
+    border: 1px solid #e4e8f0;
+    border-radius: 8px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #97a0b5;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.su-btn-purpose--selected {
+    background: #0b79ff;
+    border-color: #0b79ff;
+    color: #ffffff;
+}
+
+/* ── 버튼 행 ── */
+
+.su-btn-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.su-btn-prev {
+    flex: 1;
+    height: 52px;
+    background: #ffffff;
+    border: 1px solid #e4e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: #97a0b5;
+    transition: background 0.2s, color 0.2s;
+}
+
+.su-btn-prev:hover {
+    background: #f5f6f8;
+    color: #0b1220;
+}
+
+.su-btn-next {
+    flex: 2;
+    height: 52px;
+    background: #0b79ff;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: #ffffff;
+    transition: background 0.2s;
+}
+
+.su-btn-next:hover {
+    background: #0a6de0;
+}
+
+.su-btn-next:active {
+    background: #0960c8;
+}
+
+.su-btn-next--full {
+    flex: 1;
+}
+
+/* ── 서버 에러 메시지 ── */
+.su-signup-error {
+    font-size: 13px;
+    font-weight: 500;
+    color: #ff3b30;
+    background: rgba(255, 59, 48, 0.06);
+    border: 1px solid rgba(255, 59, 48, 0.2);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    text-align: center;
+}

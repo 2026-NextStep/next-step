@@ -1,0 +1,491 @@
+/* CoverLetterManage.css */
+
+* {
+    box-sizing: border-box;
+}
+
+.clm-root {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: #f5f6f8;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── 상단 네비게이션 ── */
+
+.clm-topnav {
+    background: #ffffff;
+    border-bottom: 1px solid #e4e8f0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.clm-topnav-inner {
+    width: 100%;
+    padding: 0 32px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    gap: 32px;
+}
+
+.clm-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.clm-logo-icon {
+    font-size: 20px;
+}
+
+.clm-logo-text {
+    font-size: 18px;
+    font-weight: 800;
+    color: #0b1220;
+    letter-spacing: -0.5px;
+}
+
+.clm-topnav-links {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex: 1;
+}
+
+.clm-topnav-link {
+    padding: 6px 14px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #6b7280;
+    border-radius: 6px;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+
+.clm-topnav-link:hover {
+    background: #f5f6f8;
+    color: #0b1220;
+}
+
+.clm-topnav-link--active {
+    color: #0b79ff;
+    font-weight: 700;
+}
+
+.clm-topnav-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.clm-icon-btn {
+    width: 36px;
+    height: 36px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: background 0.15s;
+}
+
+.clm-icon-btn:hover {
+    background: #f5f6f8;
+}
+
+.clm-avatar {
+    width: 36px;
+    height: 36px;
+    background: #0b79ff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffffff;
+    cursor: pointer;
+}
+
+/* ── 메인 ── */
+
+.clm-main {
+    width: 100%;
+    padding: 32px 48px 60px;
+    flex: 1;
+}
+
+.clm-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #97a0b5;
+    margin-bottom: 16px;
+}
+
+.clm-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.clm-page-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: #0b1220;
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+.clm-btn-new {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    background: #0b79ff;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+
+.clm-btn-new:hover {
+    background: #0a6de0;
+}
+
+/* ── 툴바 ── */
+
+.clm-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.clm-search-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #ffffff;
+    border: 1px solid #e4e8f0;
+    border-radius: 8px;
+    padding: 0 14px;
+    flex: 1;
+    min-width: 180px;
+}
+
+.clm-search-icon {
+    font-size: 14px;
+    color: #97a0b5;
+    flex-shrink: 0;
+}
+
+.clm-search {
+    border: none;
+    outline: none;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    color: #0b1220;
+    background: transparent;
+    height: 42px;
+    width: 100%;
+}
+
+.clm-search::placeholder {
+    color: #bdc4d2;
+}
+
+.clm-filters {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.clm-filter-btn {
+    height: 42px;
+    padding: 0 16px;
+    background: #ffffff;
+    border: 1px solid #e4e8f0;
+    border-radius: 8px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+
+.clm-filter-btn:hover {
+    border-color: #0b79ff;
+    color: #0b79ff;
+}
+
+.clm-filter-btn--active {
+    background: #0b79ff;
+    border-color: #0b79ff;
+    color: #ffffff;
+}
+
+.clm-sort-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 42px;
+    padding: 0 16px;
+    background: #ffffff;
+    border: 1px solid #e4e8f0;
+    border-radius: 8px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.clm-sort-btn:hover {
+    border-color: #0b79ff;
+    color: #0b79ff;
+}
+
+/* ── 목록 섹션 ── */
+
+.clm-list-section {
+    background: #ffffff;
+    border: 1px solid #e4e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+}
+
+.clm-list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.clm-list-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0b1220;
+}
+
+.clm-list-count {
+    font-size: 13px;
+    color: #97a0b5;
+}
+
+.clm-list-desc {
+    font-size: 13px;
+    color: #97a0b5;
+    margin: 0 0 20px 0;
+}
+
+.clm-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.clm-empty {
+    text-align: center;
+    padding: 40px;
+    font-size: 14px;
+    color: #97a0b5;
+}
+
+/* ── 카드 ── */
+
+.clm-card {
+    border: 1px solid #e4e8f0;
+    border-radius: 10px;
+    padding: 20px;
+    transition: box-shadow 0.2s;
+}
+
+.clm-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.clm-card-top {
+    margin-bottom: 10px;
+}
+
+.clm-card-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+}
+
+.clm-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0b1220;
+}
+
+.clm-badge {
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.clm-badge--done {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.clm-badge--draft {
+    background: #fff8e1;
+    color: #f57f17;
+}
+
+.clm-card-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 13px;
+    color: #6b7280;
+    flex-wrap: wrap;
+}
+
+.clm-card-meta strong {
+    color: #0b1220;
+}
+
+.clm-card-desc {
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.6;
+    margin: 0 0 14px 0;
+}
+
+.clm-card-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.clm-card-dates {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: #97a0b5;
+    flex-wrap: wrap;
+}
+
+.clm-card-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.clm-action-btn {
+    height: 34px;
+    padding: 0 14px;
+    border-radius: 6px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid #e4e8f0;
+    background: #ffffff;
+    color: #6b7280;
+    white-space: nowrap;
+}
+
+.clm-action-btn--edit:hover {
+    border-color: #0b79ff;
+    color: #0b79ff;
+}
+
+.clm-action-btn--download:hover {
+    border-color: #2e7d32;
+    color: #2e7d32;
+}
+
+.clm-action-btn--delete:hover {
+    border-color: #ff3b30;
+    color: #ff3b30;
+}
+
+/* ── 관리 팁 ── */
+
+.clm-tips {
+    background: #f8faff;
+    border: 1px solid #e4e8f0;
+    border-radius: 12px;
+    padding: 20px 24px;
+}
+
+.clm-tips-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0b1220;
+    margin-bottom: 12px;
+}
+
+.clm-tips-list {
+    margin: 0;
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.clm-tips-list li {
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.6;
+}
+.clm-card-actions {
+    position: relative;
+    z-index: 9999;
+}
+
+.clm-action-btn {
+    position: relative;
+    z-index: 9999;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+/* ── 반응형 ── */
+
+@media (max-width: 768px) {
+    .clm-topnav-links {
+        display: none;
+    }
+    .clm-main {
+        padding: 20px 16px 40px;
+    }
+    .clm-page-title {
+        font-size: 20px;
+    }
+}
