@@ -2,12 +2,12 @@ package com.nextstep.backend.contract.util;
 
 /**
  * 4대보험 + 소득세 공제 및 실수령액 계산 유틸.
- * 2025년 근로자 부담분 기준.
+ * 2026년 근로자 부담분 기준.
  *
- * 요율(2025년):
- *   국민연금:      4.5%
- *   건강보험:      3.545%
- *   장기요양보험:  건강보험료의 12.95%
+ * 요율(2026년):
+ *   국민연금:      4.75%
+ *   건강보험:      3.595%
+ *   장기요양보험:  건강보험료의 13.14%
  *   고용보험:      0.9%
  *
  * 소득세는 간이세액표 구간 근사식 사용 (부양가족 1인·본인 기준, 비과세 0원 가정).
@@ -15,9 +15,9 @@ package com.nextstep.backend.contract.util;
  */
 public final class SalaryCalculator {
 
-    private static final double NATIONAL_PENSION_RATE    = 0.045;
-    private static final double HEALTH_INSURANCE_RATE    = 0.03545;
-    private static final double LONG_TERM_CARE_RATE      = 0.1295;  // 건강보험료 대비
+    private static final double NATIONAL_PENSION_RATE    = 0.0475;
+    private static final double HEALTH_INSURANCE_RATE    = 0.03595;
+    private static final double LONG_TERM_CARE_RATE      = 0.1314;  // 건강보험료 대비
     private static final double EMPLOYMENT_INSURANCE_RATE = 0.009;
 
     private SalaryCalculator() {}

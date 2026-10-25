@@ -1,10 +1,16 @@
-import { User, Bookmark, Sparkles, Star, FileText } from 'lucide-react'
+import { User, Bookmark, Sparkles, Star, Gauge } from 'lucide-react'
 
 const SECTIONS = [
   {
     label: '계정 관리',
     items: [
       { key: 'profile', label: '프로필 관리', targetId: 'profile-management', Icon: User },
+    ],
+  },
+  {
+    label: '취업 준비',
+    items: [
+      { key: 'career', label: '취업 준비 현황', targetId: 'career-dashboard', Icon: Gauge },
     ],
   },
   {

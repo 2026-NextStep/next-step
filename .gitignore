@@ -50,3 +50,6 @@ ai-server/venv/
 ai-server/__pycache__/
 ai-server/**/__pycache__/
 
+# Local contract documents
+/ai-server/근로계약서_중.pdf
+/uploads/contracts/

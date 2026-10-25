@@ -16,14 +16,16 @@ import PasswordChangeForm from '../components/mypage/PasswordChangeForm'
 import BookmarkedJobCard from '../components/mypage/BookmarkedJobCard'
 import FavoritePostCard from '../components/mypage/FavoritePostCard'
 import EmptySection from '../components/mypage/EmptySection'
+import CareerDashboardSection from '../components/mypage/CareerDashboardSection'
 
-const SECTION_ORDER = ['profile', 'bookmarks', 'ai-analysis', 'favorites', 'contracts']
+const SECTION_ORDER = ['profile', 'career', 'bookmarks', 'ai-analysis', 'favorites', 'contracts']
 
 const SECTION_IDS = {
   profile: 'profile-management',
   bookmarks: 'bookmarked-jobs',
   'ai-analysis': 'ai-analysis-jobs',
   favorites: 'favorite-posts',
+  career: 'career-dashboard',
   contracts: 'recent-contracts',
 }
 
@@ -196,7 +198,7 @@ export default function MyPage() {
         if (imageAction.type === 'upload') {
           setUser(updatedUser)
         } else if (imageAction.type === 'delete') {
-          setUser(prev => ({ ...updatedUser, profileImage: null }))
+          setUser({ ...updatedUser, profileImage: null })
         } else {
           setUser(prev => ({ ...updatedUser, profileImage: prev.profileImage }))
         }
@@ -269,6 +271,12 @@ export default function MyPage() {
               <PasswordChangeForm ref={passwordFormRef} />
             )}
           </div>
+
+          {/* 취업 준비 현황 — 백엔드 연동 전 UI 골격 */}
+          <CareerDashboardSection
+            desiredJob={user?.desiredJob}
+            bookmarkCount={bookmarks.length}
+          />
 
           {/* 북마크한 채용 공고 */}
           <div id="bookmarked-jobs" className="scroll-mt-20 bg-white rounded-2xl shadow-sm p-6">
