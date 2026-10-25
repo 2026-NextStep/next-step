@@ -21,6 +21,8 @@ class Settings:
         default_factory=lambda: os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "./gcp-credentials.json")
     )
     tavily_api_key: str = field(default_factory=lambda: os.getenv("TAVILY_API_KEY", ""))
+    # 수동 수집 API(/sync, /fetch) 호출용 관리자 키. 미설정 시 localhost 요청만 허용
+    admin_api_key: str = field(default_factory=lambda: os.getenv("ADMIN_API_KEY", ""))
     db_host: str = field(default_factory=lambda: os.getenv("DB_HOST", "localhost"))
     db_user: str = field(default_factory=lambda: os.getenv("DB_USER", "root"))
     db_password: str = field(default_factory=lambda: os.getenv("DB_PASSWORD", ""))
