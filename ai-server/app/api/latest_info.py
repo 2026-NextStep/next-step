@@ -3,12 +3,13 @@ import logging
 from datetime import date, datetime
 
 import pymysql
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from google import genai
 from pydantic import BaseModel
 from tavily import TavilyClient
 
 from app.core.config import settings
+from app.core.security import require_admin
 from app.services.llm_service import generate_json
 
 router = APIRouter(prefix="/api/latest-info", tags=["latest-info"])
@@ -173,7 +174,7 @@ async def fetch_and_save():
     return saved
 
 
-@router.post("/fetch")
+@router.post("/fetch", dependencies=[Depends(require_admin)])
 async def trigger_fetch():
     count = await fetch_and_save()
     return {"saved": count, "message": f"{count}개 기사가 저장되었습니다."}

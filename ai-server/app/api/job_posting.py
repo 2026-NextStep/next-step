@@ -6,9 +6,10 @@ from datetime import date, timedelta
 import pymysql
 import requests
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.core.config import settings
+from app.core.security import require_admin
 
 router = APIRouter(prefix="/api/job-postings", tags=["job-postings"])
 logger = logging.getLogger(__name__)
@@ -171,7 +172,7 @@ def sync_job_postings() -> dict:
     return {"total": len(all_items)}
 
 
-@router.post("/sync", summary="채용공고 수동 동기화")
+@router.post("/sync", summary="채용공고 수동 동기화", dependencies=[Depends(require_admin)])
 def trigger_sync():
     try:
         result = sync_job_postings()
