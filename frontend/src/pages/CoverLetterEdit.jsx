@@ -22,7 +22,7 @@ const SOURCE_LABEL = {
 };
 
 const AGENT_STEPS = [
-    "공고 분석 (필수 역량 키워드 추출)",
+    "공고 분석 (공고/JD 자료가 있을 때만)",
     "STAR 구조로 작성 (사실마다 근거 구절 제시)",
     "근거 대조 + 면접관 평가",
     "기준 미달 문항 자가수정 (최대 2회)",
@@ -67,92 +67,121 @@ function SourceChip({ source }) {
 function Score({ label, value, min }) {
     const ok = value >= min;
     return (
-        <span style={{ fontSize: "14px" }}>
-            {label}:{" "}
-            <strong style={{ color: ok ? "#16a34a" : "#d97706", fontSize: "16px" }}>{value}점</strong>
-            <span style={{ color: "#94a3b8", fontSize: "12px" }}> (기준 {min})</span>
+        <span title={`기준 ${min}점`} style={{ whiteSpace: "nowrap" }}>
+            {label} <strong style={{ color: ok ? "#16a34a" : "#d97706" }}>{value}점</strong>
         </span>
     );
 }
 
-// 상단 검증 리포트
-function ReportCard({ agent }) {
+// 상단 검증 리포트: 기본은 한 줄 요약, "자세히"를 누르면 펼쳐진다
+function ReportBar({ agent, open, onToggle }) {
     const { report, sources } = agent;
     const coreKeywords = report.keywords?.core ?? [];
     const preferred = report.keywords?.preferred ?? [];
+    const evaluated = report.evaluated !== false;   // false 면 AI 혼잡으로 면접관 평가를 받지 못한 것
 
     return (
-        <div style={{ ...cardStyle, background: "#f0f9ff", borderColor: "#bae6fd", marginBottom: "20px" }}>
-            <div style={{ fontWeight: 800, color: "#0369a1", fontSize: "15px", marginBottom: "10px" }}>
-                🛡 AI Agent 결과 신뢰성 및 명확성 검증 리포트
-            </div>
+        <div style={{ ...cardStyle, background: "#f0f9ff", borderColor: "#bae6fd", padding: "10px 14px", marginBottom: "16px" }}>
 
-            <div style={{ display: "flex", gap: "18px", flexWrap: "wrap", alignItems: "center", marginBottom: "10px" }}>
-                <Score label="직무 연관성" value={report.jobRelevance} min={report.minRelevance} />
-                <Score label="문맥/완성도" value={report.completeness} min={report.minCompleteness} />
-                <span style={{ fontSize: "14px" }}>
-                    근거 확인: <strong>{report.verifiedClaims}/{report.totalClaims}건</strong>
+            {/* 한 줄 요약 */}
+            <div style={{ display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap", fontSize: "13px", color: "#334155" }}>
+                <span style={{ fontWeight: 800, color: "#0369a1", whiteSpace: "nowrap" }}>🛡 AI Agent 검증 리포트</span>
+
+                {evaluated ? (
+                    <>
+                        <Score label="직무 연관성" value={report.jobRelevance} min={report.minRelevance} />
+                        <Score label="문맥/완성도" value={report.completeness} min={report.minCompleteness} />
+                    </>
+                ) : (
+                    <span style={{ color: "#b45309", fontWeight: 700 }}>⚠ 면접관 평가를 받지 못했어요 (AI 혼잡)</span>
+                )}
+
+                <span style={{ whiteSpace: "nowrap" }}>
+                    근거 확인 <strong>{report.verifiedClaims}/{report.totalClaims}</strong>건
                 </span>
+
+                {evaluated && <Pill ok={report.passed}>{report.passed ? "✓ 기준 통과" : "⚠ 일부 미달"}</Pill>}
+                <Pill ok={report.grounded}>{report.grounded ? "✓ 공고/JD 근거" : "공고 근거 없음"}</Pill>
+
+                <button
+                    onClick={onToggle}
+                    style={{
+                        marginLeft: "auto", border: "none", background: "transparent", color: "#0369a1",
+                        fontWeight: 700, fontSize: "12px", cursor: "pointer", whiteSpace: "nowrap",
+                    }}
+                >
+                    {open ? "접기 ▲" : "자세히 ▼"}
+                </button>
             </div>
 
-            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "12px" }}>
-                <Pill ok={report.passed}>{report.passed ? "✓ 평가 기준 통과" : "⚠ 일부 문항 기준 미달"}</Pill>
-                <Pill ok={report.starComplete}>{report.starComplete ? "✓ STAR 4요소 충족" : "STAR 일부 미충족"}</Pill>
-                <Pill ok={report.grounded}>{report.grounded ? "✓ 공고/JD 근거 연결" : "공고 근거 없음 (직무 이름 기준)"}</Pill>
-            </div>
+            {/* 자세한 내용 (기본은 접힘) */}
+            {open && (
+                <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: "1px solid #bae6fd" }}>
 
-            <div style={{ fontSize: "13px", color: "#334155", lineHeight: 1.7, marginBottom: "12px" }}>
-                💡 <strong>검증 근거 요약:</strong> {report.evidence}
-            </div>
-
-            {(coreKeywords.length > 0 || preferred.length > 0) && (
-                <div style={{ marginBottom: "12px" }}>
-                    <div style={{ fontSize: "12px", fontWeight: 700, color: "#475569", marginBottom: "6px" }}>
-                        핵심 역량 키워드 <span style={{ fontWeight: 400 }}>(✓ 자료에서 확인 / ~ AI 추정)</span>
+                    <div style={{ fontSize: "13px", color: "#334155", lineHeight: 1.7, marginBottom: "12px" }}>
+                        💡 <strong>검증 근거 요약:</strong> {report.evidence}
+                        {evaluated && (
+                            <span style={{ color: "#94a3b8" }}>
+                                {" "}(기준: 직무 연관성 {report.minRelevance}점, 문맥/완성도 {report.minCompleteness}점 이상)
+                            </span>
+                        )}
                     </div>
-                    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                        {coreKeywords.map((k) => <KeywordChip key={`c-${k.text}`} k={k} strong />)}
-                        {preferred.map((k) => <KeywordChip key={`p-${k.text}`} k={k} />)}
+
+                    {(coreKeywords.length > 0 || preferred.length > 0) && (
+                        <div style={{ marginBottom: "12px" }}>
+                            <div style={{ fontSize: "12px", fontWeight: 700, color: "#475569", marginBottom: "6px" }}>
+                                핵심 역량 키워드 <span style={{ fontWeight: 400 }}>(✓ 자료에서 확인 / ~ AI 추정)</span>
+                            </div>
+                            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                                {coreKeywords.map((k) => <KeywordChip key={`c-${k.text}`} k={k} strong />)}
+                                {preferred.map((k) => <KeywordChip key={`p-${k.text}`} k={k} />)}
+                            </div>
+                        </div>
+                    )}
+
+                    <div style={{ marginBottom: "12px" }}>
+                        <div style={{ fontSize: "12px", fontWeight: 700, color: "#475569", marginBottom: "6px" }}>
+                            📚 출처 <span style={{ fontWeight: 400 }}>— 이 평가와 근거에 실제로 사용한 자료만 표시합니다</span>
+                        </div>
+                        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                            {sources.map((s) => <SourceChip key={s.id} source={s} />)}
+                        </div>
+                    </div>
+
+                    {report.rounds?.length > 0 && (
+                        <div style={{ marginBottom: "12px" }}>
+                            <div style={{ fontSize: "12px", fontWeight: 700, color: "#475569", marginBottom: "6px" }}>🔁 에이전트 진행 기록</div>
+                            <ol style={{ margin: 0, paddingLeft: "18px", fontSize: "12px", color: "#475569", lineHeight: 1.8 }}>
+                                {report.rounds.map((r) => (
+                                    <li key={r.round}>
+                                        {r.note} — 직무 연관성 {r.jobRelevance} · 문맥/완성도 {r.completeness} · 통과 {r.passedCount}/{r.totalCount}문항
+                                    </li>
+                                ))}
+                            </ol>
+                        </div>
+                    )}
+
+                    {report.improvements?.length > 0 && (
+                        <div style={{ marginBottom: "10px" }}>
+                            <div style={{ fontSize: "12px", fontWeight: 700, color: "#b45309", marginBottom: "6px" }}>
+                                ⚠ 보완 필요 ({report.improvements.length}건)
+                            </div>
+                            <ul style={{
+                                margin: 0, paddingLeft: "18px", fontSize: "12px", color: "#475569", lineHeight: 1.8,
+                                maxHeight: "180px", overflowY: "auto",
+                            }}>
+                                {report.improvements.map((m, i) => (
+                                    <li key={i}><strong>문항 {m.questionNumber}</strong> {m.text}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    <div style={{ fontSize: "11px", color: "#94a3b8", lineHeight: 1.6 }}>
+                        ※ 점수는 AI 면접관이 매긴 값입니다. 기준 통과 여부와 근거 확인(인용 구절이 원문에 실제로 있는지)은 서버가 직접 판단했습니다.
                     </div>
                 </div>
             )}
-
-            <div style={{ marginBottom: "12px" }}>
-                <div style={{ fontSize: "12px", fontWeight: 700, color: "#475569", marginBottom: "6px" }}>
-                    📚 출처 <span style={{ fontWeight: 400 }}>— 이 평가와 근거에 실제로 사용한 자료만 표시합니다</span>
-                </div>
-                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                    {sources.map((s) => <SourceChip key={s.id} source={s} />)}
-                </div>
-            </div>
-
-            {report.rounds?.length > 0 && (
-                <div style={{ marginBottom: "12px" }}>
-                    <div style={{ fontSize: "12px", fontWeight: 700, color: "#475569", marginBottom: "6px" }}>🔁 에이전트 진행 기록</div>
-                    <ol style={{ margin: 0, paddingLeft: "18px", fontSize: "12px", color: "#475569", lineHeight: 1.8 }}>
-                        {report.rounds.map((r) => (
-                            <li key={r.round}>
-                                {r.note} — 직무 연관성 {r.jobRelevance} · 문맥/완성도 {r.completeness} · 통과 {r.passedCount}/{r.totalCount}문항
-                            </li>
-                        ))}
-                    </ol>
-                </div>
-            )}
-
-            {report.improvements?.length > 0 && (
-                <div style={{ marginBottom: "10px" }}>
-                    <div style={{ fontSize: "12px", fontWeight: 700, color: "#b45309", marginBottom: "6px" }}>⚠ 보완 필요</div>
-                    <ul style={{ margin: 0, paddingLeft: "18px", fontSize: "12px", color: "#475569", lineHeight: 1.8 }}>
-                        {report.improvements.map((m, i) => (
-                            <li key={i}><strong>문항 {m.questionNumber}</strong> {m.text}</li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-
-            <div style={{ fontSize: "11px", color: "#94a3b8", lineHeight: 1.6 }}>
-                ※ 점수는 AI 면접관이 매긴 값입니다. 기준 통과 여부와 근거 확인(인용 구절이 원문에 실제로 있는지)은 서버가 직접 판단했습니다.
-            </div>
         </div>
     );
 }
@@ -171,31 +200,36 @@ function KeywordChip({ k, strong }) {
     );
 }
 
-// 문항별 점수 + 근거 확인
+// 문항별 점수 + 근거 확인: 작은 한 줄, 근거 목록은 눌러야 보인다
 function EvidencePanel({ q, sources, open, onToggle, stale }) {
     const total = q.claims.length;
     const verified = q.claims.filter((c) => c.verified).length;
     const sourceTitle = (id) => sources.find((s) => s.id === id)?.title ?? id;
 
     return (
-        <div style={{ ...cardStyle, marginTop: "8px", padding: "10px 14px", background: "#fafafa" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", fontSize: "12px", color: "#475569" }}>
-                <Pill ok={q.passed}>{q.passed ? "✓ 기준 통과" : "⚠ 기준 미달"}</Pill>
-                <span>직무 연관성 <strong>{q.jobRelevance}</strong> · 문맥/완성도 <strong>{q.completeness}</strong></span>
-                {[["S", q.star.situation], ["T", q.star.task], ["A", q.star.action], ["R", q.star.result]].map(([name, ok]) => (
-                    <span key={name} style={{
-                        fontWeight: 700, padding: "1px 7px", borderRadius: "6px",
-                        background: ok ? "#dcfce7" : "#fee2e2", color: ok ? "#15803d" : "#b91c1c",
-                    }}>
-                        {name} {ok ? "✓" : "✗"}
-                    </span>
-                ))}
-                {q.rewrites > 0 && <span style={{ color: "#64748b" }}>자가수정 {q.rewrites}회</span>}
+        <div style={{ marginTop: "6px", fontSize: "12px", color: "#64748b" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                {q.evaluated === false ? (
+                    <span style={{ color: "#b45309", fontWeight: 700 }}>평가 없음 (AI 혼잡)</span>
+                ) : (
+                    <>
+                        <span style={{ fontWeight: 700, color: q.passed ? "#15803d" : "#b45309" }}>
+                            {q.passed ? "✓ 기준 통과" : "⚠ 기준 미달"}
+                        </span>
+                        <span>직무 {q.jobRelevance} · 완성도 {q.completeness}</span>
+                        {[["S", q.star.situation], ["T", q.star.task], ["A", q.star.action], ["R", q.star.result]].map(([name, ok]) => (
+                            <span key={name} style={{ fontWeight: 700, color: ok ? "#15803d" : "#b91c1c" }}>
+                                {name} {ok ? "✓" : "✗"}
+                            </span>
+                        ))}
+                    </>
+                )}
+                {q.rewrites > 0 && <span>자가수정 {q.rewrites}회</span>}
                 <button
                     onClick={onToggle}
                     style={{
-                        marginLeft: "auto", border: "none", background: "#e0f2fe", color: "#0369a1", fontWeight: 700,
-                        borderRadius: "6px", padding: "4px 10px", fontSize: "12px", cursor: "pointer",
+                        border: "none", background: "transparent", color: "#0369a1", fontWeight: 700,
+                        fontSize: "12px", cursor: "pointer", padding: 0,
                     }}
                 >
                     🔎 근거 확인 ({verified}/{total}) {open ? "▲" : "▼"}
@@ -203,19 +237,15 @@ function EvidencePanel({ q, sources, open, onToggle, stale }) {
             </div>
 
             {open && (
-                <div style={{ marginTop: "10px" }}>
+                <div style={{ marginTop: "8px", padding: "8px 12px", background: "#fafafa", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
                     {stale && (
-                        <div style={{ fontSize: "12px", color: "#b45309", marginBottom: "8px" }}>
+                        <div style={{ color: "#b45309", marginBottom: "8px" }}>
                             ⚠ 수정된 내용을 직접 고쳤기 때문에, 아래 근거 확인은 AI가 쓴 원래 수정본 기준입니다.
                         </div>
                     )}
-                    {total === 0 && (
-                        <div style={{ fontSize: "12px", color: "#64748b" }}>
-                            수정본이 근거로 제시한 사실이 없습니다.
-                        </div>
-                    )}
+                    {total === 0 && <div>수정본이 근거로 제시한 사실이 없습니다.</div>}
                     {q.claims.map((c, i) => (
-                        <div key={i} style={{ fontSize: "12px", lineHeight: 1.7, padding: "8px 0", borderTop: i ? "1px dashed #e2e8f0" : "none" }}>
+                        <div key={i} style={{ lineHeight: 1.7, padding: "6px 0", borderTop: i ? "1px dashed #e2e8f0" : "none" }}>
                             <div style={{ fontWeight: 700, color: "#1e293b" }}>
                                 {c.verified ? "✓" : "⚠"} {c.text}
                             </div>
@@ -250,6 +280,7 @@ export default function CoverLetterEdit() {
     const [feedback, setFeedback]     = useState(null); // { summary, comments: [{questionNumber, text}] }
     const [agent, setAgent]           = useState(null); // { report, questions, sources, aiRevised }
     const [openEvidence, setOpenEvidence] = useState({});
+    const [reportOpen, setReportOpen] = useState(false);   // 검증 리포트 자세히 보기 (기본은 접힘)
     const [errorMsg, setErrorMsg]     = useState("");
     const [loading, setLoading]       = useState(false);
     const [elapsed, setElapsed]       = useState(0);
@@ -366,7 +397,7 @@ export default function CoverLetterEdit() {
                     referenceName: pdfFile ? pdfFile.name : "",
                     referenceType: refType,
                 },
-                { timeout: 240000 }  // 에이전트는 AI 를 3~7번 부르므로 오래 걸릴 수 있다
+                { timeout: 180000 }  // 서버가 140초 안에 끝내도록 제한하므로, 그보다 조금 길게 기다린다
             );
 
             const data = response.data;
@@ -393,6 +424,7 @@ export default function CoverLetterEdit() {
                 aiRevised: filled,
             });
             setOpenEvidence({});
+            setReportOpen(false);
             setFeedback({
                 summary: data.summary || "첨삭이 완료되었습니다.",
                 comments: revisions
@@ -486,7 +518,7 @@ export default function CoverLetterEdit() {
                     </div>
 
                     {/* AI Agent 검증 리포트 + 출처 */}
-                    {agent && <ReportCard agent={agent} />}
+                    {agent && <ReportBar agent={agent} open={reportOpen} onToggle={() => setReportOpen((o) => !o)} />}
 
                     {/* 문항별 섹션 */}
                     {questions.map((q, idx) => {
@@ -598,7 +630,7 @@ export default function CoverLetterEdit() {
                                     {AGENT_STEPS.map((s) => <li key={s}>{s}</li>)}
                                 </ol>
                                 <div style={{ marginTop: "10px", fontSize: "12px", fontWeight: 500, color: "#64748b" }}>
-                                    경과 {elapsed}초 · 보통 30초~2분 걸려요
+                                    경과 {elapsed}초 · 보통 30초~2분, AI가 혼잡하면 최대 2분 20초쯤 걸려요
                                 </div>
                             </div>
                         ) : errorMsg ? (
