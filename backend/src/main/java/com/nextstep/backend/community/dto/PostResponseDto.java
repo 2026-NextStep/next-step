@@ -14,7 +14,7 @@ public class PostResponseDto {
     private String content;
     private String job;
     private String writer;
-    private String writerRole; // ← 추가
+    private String writerRole; // 조회할 때 서비스가 현재 역할로 덮어쓴다
     private String writerProfileImage;
     private String createdAt;
     private int views;
@@ -32,13 +32,17 @@ public class PostResponseDto {
         this.content      = post.getContent();
         this.job          = post.getJob();
         this.writer       = post.getWriter();
-        this.writerRole   = post.getWriterRole(); // ← 추가
+        this.writerRole   = post.getWriterRole();
         this.createdAt    = post.getCreatedAt() != null
                 ? post.getCreatedAt().format(FORMATTER) : "";
         this.views        = post.getViews();
         this.likes        = post.getLikes();
         this.commentCount = post.getCommentCount();
         this.hot          = post.getLikes() >= 50;
+    }
+
+    public void setWriterRole(String writerRole) {
+        this.writerRole = writerRole;
     }
 
     public void setWriterProfileImage(String writerProfileImage) {

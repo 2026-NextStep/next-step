@@ -36,3 +36,7 @@ spring.mail.properties.mail.smtp.starttls.enable=true
 # Kakao OAuth
 kakao.client-id=YOUR_KAKAO_REST_API_KEY
 kakao.redirect-uri=http://localhost:5173/oauth/kakao/callback
+
+# Gemini (자소서 AI 첨삭)
+gemini.api-key=YOUR_GEMINI_API_KEY
+gemini.model=gemini-3.6-flash
