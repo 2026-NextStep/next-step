@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./CoverLetterDetail.css";
+import axiosInstance from "../api/axiosInstance";
 
 export default function CoverLetterDetail() {
 
@@ -16,6 +17,7 @@ export default function CoverLetterDetail() {
     const [aiAnswers, setAiAnswers]         = useState({});
     const [saving, setSaving]               = useState(false);
     const [savingTitle, setSavingTitle]     = useState(false);
+    const [sharing, setSharing]             = useState(false);
 
     useEffect(() => {
         const fetchDetail = async () => {
@@ -112,6 +114,30 @@ export default function CoverLetterDetail() {
         }
     };
 
+    // 커뮤니티 첨삭 요청: 이 자소서를 커뮤니티 '자소서' 카테고리에 글로 올린다.
+    // 전화번호/이메일/주민등록번호는 서버가 가린 뒤 저장한다. 올린 사람은 로그인 토큰으로 확인하므로
+    // 토큰이 자동으로 붙는 axiosInstance 를 쓴다.
+    const handleShare = async () => {
+        if (sharing) return;
+        if (!window.confirm(
+            "개인정보(전화번호, 이메일 등)가 자동 마스킹 처리된 후 커뮤니티에 첨삭 요청글로 등록됩니다. 공유하시겠습니까?"
+        )) {
+            return;
+        }
+
+        setSharing(true);
+        try {
+            const res = await axiosInstance.post(`/community/post/from-resume/${id}`);
+            alert("커뮤니티에 첨삭 요청글이 등록되었습니다.");
+            navigate(`/community/${res.data.id}`);
+        } catch (e) {
+            console.error("커뮤니티 공유 실패", e);
+            alert(e.response?.data?.message || "커뮤니티 공유에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+        } finally {
+            setSharing(false);
+        }
+    };
+
     const totalChars = Object.values(answers).reduce(
         (sum, a) => sum + (a?.length ?? 0), 0
     );
@@ -137,7 +163,7 @@ export default function CoverLetterDetail() {
     return (
         <div className="cld-root">
 
-            
+
             <main className="cld-main">
 
                 <div className="cld-breadcrumb">
@@ -272,6 +298,9 @@ export default function CoverLetterDetail() {
                             ← 목록으로
                         </button>
                         <div className="cld-footer-right">
+                            <button className="cld-btn-primary" onClick={handleShare} disabled={sharing}>
+                                📢 {sharing ? "등록 중..." : "커뮤니티 첨삭 요청"}
+                            </button>
                             <button className="cld-btn-outline" onClick={() => navigate(`/cover-letter/edit/${letter.id}`)}>
                                 ✏ 수정하기
                             </button>
