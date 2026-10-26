@@ -48,6 +48,7 @@ export default function CommunityDetail() {
     const [comments, setComments]       = useState([]);
     const [liked, setLiked]             = useState(false);
     const [likeCount, setLikeCount]     = useState(0);
+    const [likeBusy, setLikeBusy]       = useState(false);  // 좋아요 요청 중 (연타 방지)
     const [bookmarked, setBookmarked]   = useState(false);
     const [commentText, setCommentText] = useState("");
     const [loading, setLoading]         = useState(true);
@@ -86,6 +87,7 @@ export default function CommunityDetail() {
                 setPost(data);
                 setComments(data.comments || []);
                 setLikeCount(data.likes);
+                setLiked(!!data.liked);   // 서버가 기억하는 "내가 좋아요를 눌렀는지"
             } catch (e) {
                 console.error("게시글 로드 실패", e);
             } finally {
@@ -111,17 +113,21 @@ export default function CommunityDetail() {
         fetchBookmarkStatus();
     }, [id]);
 
+    // 좋아요: 한 사람이 한 글에 한 번만 (이미 눌렀으면 취소). 누른 기록은 서버가 가지고 있고,
+    // 로그인 토큰으로 누구인지 확인하므로 토큰이 자동으로 붙는 axiosInstance 를 쓴다.
     const handleLike = async () => {
-        if (liked) { setLikeCount((c) => c - 1); setLiked(false); return; }
+        if (likeBusy) return;
+        setLikeBusy(true);
         try {
-            const res  = await fetch(
-                `http://localhost:8080/api/v1/community/post/${id}/like`,
-                { method: "POST", credentials: "include" }
-            );
-            const data = await res.json();
-            setLikeCount(data.likes);
-            setLiked(true);
-        } catch (e) { console.error("추천 실패", e); }
+            const res = await axiosInstance.post(`/community/post/${id}/like`);
+            setLikeCount(res.data.likes);
+            setLiked(!!res.data.liked);
+        } catch (e) {
+            console.error("좋아요 실패", e);
+            alert(e.response?.data?.message || "좋아요에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+        } finally {
+            setLikeBusy(false);
+        }
     };
 
     const handleBookmark = async () => {

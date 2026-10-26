@@ -40,16 +40,18 @@ public class CommunityController {
     }
 
     // 게시글 상세 (조회수 증가 + 댓글 포함). 같은 사람은 같은 글의 조회수를 하루에 한 번만 올린다.
+    // 로그인 토큰이 같이 오면 "내가 좋아요를 눌렀는지"(liked)도 함께 내려준다.
     @GetMapping("/post/{id}")
     public PostDetailResponseDto getPost(@PathVariable Long id, HttpServletRequest request) {
-        return communityService.getPost(id, viewerKey(request));
+        Long memberId = securityUtil.getCurrentMemberIdOrNull();
+        return communityService.getPost(id, viewerKey(memberId, request), memberId);
     }
 
-    // 추천
+    // 좋아요 (한 사람이 한 글에 한 번만. 이미 눌렀으면 취소). 로그인한 사용자만 가능
+    // 응답: { likes, liked }
     @PostMapping("/post/{id}/like")
-    public Map<String, Integer> likePost(@PathVariable Long id) {
-        int likes = communityService.likePost(id);
-        return Map.of("likes", likes);
+    public Map<String, Object> toggleLike(@PathVariable Long id) {
+        return communityService.toggleLike(id, securityUtil.getCurrentMemberId());
     }
 
     // 댓글 작성 (body 에 parentId 를 보내면 대댓글)
@@ -80,8 +82,7 @@ public class CommunityController {
 
     // 조회한 사람을 구분하는 값: 로그인했으면 회원 번호, 아니면 접속 IP
     // (로그인 상태로 조회하려면 요청에 로그인 토큰이 함께 와야 한다)
-    private String viewerKey(HttpServletRequest request) {
-        Long memberId = securityUtil.getCurrentMemberIdOrNull();
+    private String viewerKey(Long memberId, HttpServletRequest request) {
         if (memberId != null) {
             return "M:" + memberId;
         }

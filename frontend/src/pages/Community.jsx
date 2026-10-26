@@ -37,55 +37,72 @@ export default function Community() {
     const [searchInput, setSearchInput]       = useState("");
     const [selectedJob, setSelectedJob]       = useState("");
 
-    const [loading, setLoading]     = useState(false);
+    const [loadedKey, setLoadedKey] = useState("");   // 마지막으로 결과를 받아온 조건
     const [bookmarks, setBookmarks] = useState(new Set());
 
     const navigate    = useNavigate();
     const currentUser = getLoggedInUser();
 
-    const fetchBookmarks = async () => {
-        if (!currentUser) return;
-        try {
-            const res  = await fetch(
-                `http://localhost:8080/api/v1/community/bookmarks?username=${currentUser}`,
-                { credentials: "include" }
-            );
-            const data = await res.json();
-            setBookmarks(new Set(data.postIds));
-        } catch (e) {
-            console.error("즐겨찾기 로드 실패", e);
-        }
-    };
+    // 지금 화면이 보여줘야 할 조건. 이 조건으로 받아온 결과가 아직 없으면 "로딩 중"
+    const requestKey = JSON.stringify([activeCategory, activeSort, keyword, selectedJob, currentPage]);
+    const loading    = loadedKey !== requestKey;
 
-    const fetchPosts = async (page = 0) => {
-        setLoading(true);
-        try {
-            const params = new URLSearchParams({
-                category: activeCategory,
-                sort:     activeSort,
-                keyword:  keyword,
-                job:      selectedJob === "직종 전체" ? "" : selectedJob,
-                page:     page,
-                size:     10,
-            });
-            const res  = await fetch(
-                `http://localhost:8080/api/v1/community/posts?${params}`,
-                { credentials: "include" }
-            );
-            const data = await res.json();
-            setPosts(data.posts);
-            setTotalCount(data.totalCount);
-            setTotalPages(data.totalPages);
-            setCurrentPage(data.currentPage);
-        } catch (e) {
-            console.error("게시글 로드 실패", e);
-        } finally {
-            setLoading(false);
-        }
-    };
+    // 즐겨찾기 불러오기 (로그인한 경우에만)
+    useEffect(() => {
+        if (!currentUser) return undefined;
+        let cancelled = false;
 
-    useEffect(() => { fetchBookmarks(); }, []);
-    useEffect(() => { fetchPosts(0); }, [activeCategory, activeSort, keyword, selectedJob]);
+        const load = async () => {
+            try {
+                const res  = await fetch(
+                    `http://localhost:8080/api/v1/community/bookmarks?username=${currentUser}`,
+                    { credentials: "include" }
+                );
+                const data = await res.json();
+                if (!cancelled) setBookmarks(new Set(data.postIds));
+            } catch (e) {
+                console.error("즐겨찾기 로드 실패", e);
+            }
+        };
+
+        void load();
+        return () => { cancelled = true; };
+    }, [currentUser]);
+
+    // 게시글 목록 불러오기: 카테고리 / 정렬 / 검색어 / 직종 / 페이지가 바뀔 때마다 다시 불러온다
+    useEffect(() => {
+        let cancelled = false;
+        const key = requestKey;
+
+        const load = async () => {
+            try {
+                const params = new URLSearchParams({
+                    category: activeCategory,
+                    sort:     activeSort,
+                    keyword:  keyword,
+                    job:      selectedJob === "직종 전체" ? "" : selectedJob,
+                    page:     String(currentPage),
+                    size:     "10",
+                });
+                const res  = await fetch(
+                    `http://localhost:8080/api/v1/community/posts?${params}`,
+                    { credentials: "include" }
+                );
+                const data = await res.json();
+                if (cancelled) return;   // 그 사이 조건이 또 바뀌었으면 이 결과는 버린다
+                setPosts(data.posts ?? []);
+                setTotalCount(data.totalCount ?? 0);
+                setTotalPages(Math.max(1, data.totalPages ?? 1));
+            } catch (e) {
+                if (!cancelled) console.error("게시글 로드 실패", e);
+            } finally {
+                if (!cancelled) setLoadedKey(key);
+            }
+        };
+
+        void load();
+        return () => { cancelled = true; };
+    }, [requestKey, activeCategory, activeSort, keyword, selectedJob, currentPage]);
 
     const handleBookmark = async (e, postId) => {
         e.stopPropagation();
@@ -107,10 +124,11 @@ export default function Community() {
         }
     };
 
-    const handleSearch   = () => setKeyword(searchInput);
+    const handleSearch   = () => { setKeyword(searchInput);       setCurrentPage(0); };
+    const handleJob      = (job)      => { setSelectedJob(job);        setCurrentPage(0); };
     const handleCategory = (category) => { setActiveCategory(category); setCurrentPage(0); };
     const handleSort     = (sort)     => { setActiveSort(sort);         setCurrentPage(0); };
-    const handlePage     = (page)     => { setCurrentPage(page);        fetchPosts(page);  };
+    const handlePage     = (page)     => setCurrentPage(page);
 
     return (
         <div className="com-root">
@@ -141,7 +159,7 @@ export default function Community() {
                             onChange={(e) => setSearchInput(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                         />
-                        <select className="com-select" value={selectedJob} onChange={(e) => setSelectedJob(e.target.value)}>
+                        <select className="com-select" value={selectedJob} onChange={(e) => handleJob(e.target.value)}>
                             {JOBS.map((job) => <option key={job} value={job}>{job}</option>)}
                         </select>
                         <button className="com-search-btn" onClick={handleSearch}>검색</button>

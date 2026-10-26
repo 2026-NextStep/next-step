@@ -22,6 +22,7 @@ public class PostDetailResponseDto {
     private String createdAt;
     private int    views;
     private int    likes;
+    private boolean liked;     // 지금 보는 사람이 이 글에 좋아요를 눌렀는지 (비로그인이면 false)
     private int    commentCount;
     private boolean hot;
 
@@ -49,6 +50,10 @@ public class PostDetailResponseDto {
                 .sorted(Comparator.comparing(Comment::getId))
                 .map(CommentResponseDto::new)
                 .toList();
+    }
+
+    public void setLiked(boolean liked) {
+        this.liked = liked;
     }
 
     public void setWriterRole(String writerRole) {

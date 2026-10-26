@@ -4,6 +4,7 @@ import com.nextstep.backend.community.dto.*;
 import com.nextstep.backend.community.entity.Comment;
 import com.nextstep.backend.community.entity.Post;
 import com.nextstep.backend.community.repository.CommentRepository;
+import com.nextstep.backend.community.repository.PostLikeRepository;
 import com.nextstep.backend.community.repository.PostRepository;
 import com.nextstep.backend.member.entity.Member;
 import com.nextstep.backend.member.repository.MemberRepository;
@@ -32,6 +33,7 @@ public class CommunityService {
     private final CommentRepository commentRepository;
     private final MemberRepository  memberRepository;
     private final PostViewService   postViewService;
+    private final PostLikeRepository postLikeRepository;
 
     // 게시글 작성
     public PostResponseDto createPost(PostRequest request) {
@@ -94,8 +96,9 @@ public class CommunityService {
 
     // 게시글 상세 조회 (조회수 증가 + 댓글 포함)
     // viewerKey: 조회한 사람을 구분하는 값. 같은 사람은 같은 글의 조회수를 하루에 한 번만 올린다.
+    // memberId: 로그인한 회원 번호 (비로그인이면 null). 이 회원이 좋아요를 눌렀는지 함께 내려준다.
     @Transactional
-    public PostDetailResponseDto getPost(Long id, String viewerKey) {
+    public PostDetailResponseDto getPost(Long id, String viewerKey, Long memberId) {
         if (!postRepository.existsById(id)) {
             throw new NoSuchElementException("게시글을 찾을 수 없습니다.");
         }
@@ -106,6 +109,7 @@ public class CommunityService {
         Post post = postRepository.findById(id).orElseThrow();
 
         PostDetailResponseDto dto = new PostDetailResponseDto(post);
+        dto.setLiked(memberId != null && postLikeRepository.existsByPostIdAndMemberId(id, memberId));
 
         // 글쓴이 + 댓글 작성자를 한 번에 조회 (배치)
         List<String> nicknames = new ArrayList<>();
@@ -135,13 +139,28 @@ public class CommunityService {
         return dto;
     }
 
-    // 추천 (likes + 1)
+    // 좋아요: 한 사람이 한 글에 한 번만 누를 수 있다.
+    // 아직 안 눌렀으면 좋아요(+1), 이미 눌렀으면 취소(-1). 누른 기록은 post_like 에 남긴다.
+    // 돌려주는 값: { likes: 현재 좋아요 수, liked: 이 사람이 지금 좋아요를 누른 상태인지 }
     @Transactional
-    public int likePost(Long id) {
-        Post post = postRepository.findById(id).orElseThrow();
-        post.setLikes(post.getLikes() + 1);
-        postRepository.save(post);
-        return post.getLikes();
+    public Map<String, Object> toggleLike(Long postId, Long memberId) {
+        if (!postRepository.existsById(postId)) {
+            throw new NoSuchElementException("게시글을 찾을 수 없습니다.");
+        }
+
+        boolean liked;
+        if (postLikeRepository.deleteByPair(postId, memberId) > 0) {
+            postLikeRepository.decrement(postId);        // 이미 눌렀던 사람 → 좋아요 취소
+            liked = false;
+        } else if (postLikeRepository.insertIgnore(postId, memberId) > 0) {
+            postLikeRepository.increment(postId);        // 처음 누른 사람 → 좋아요
+            liked = true;
+        } else {
+            liked = true;                                // 동시에 두 번 눌려 다른 요청이 먼저 기록한 경우: 이미 좋아요 상태
+        }
+
+        int likes = postRepository.findById(postId).orElseThrow().getLikes();
+        return Map.of("likes", likes, "liked", liked);
     }
 
     // 댓글 작성 (parentId 가 있으면 대댓글)
