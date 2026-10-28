@@ -15,6 +15,8 @@ logging.level.org.hibernate.orm.jdbc.bind=TRACE
 
 # AI Server (FastAPI)
 ai.fastapi.base-url=http://localhost:8000
+# 채용공고 AI 분석·최신정보 맞춤 추천이 호출하는 AI 서버 주소 (기본값 http://localhost:8000)
+ai.server.url=http://localhost:8000
 
 # Frontend (메일 내 링크 생성용)
 frontend.base-url=http://localhost:5173
@@ -40,3 +42,12 @@ kakao.redirect-uri=http://localhost:5173/oauth/kakao/callback
 # Gemini (자소서 AI 첨삭)
 gemini.api-key=YOUR_GEMINI_API_KEY
 gemini.model=gemini-3.6-flash
+
+# 사용 횟수 제한 (선택 — 생략하면 아래 기본값으로 동작)
+# AI 첨삭(회원당 하루), PDF 텍스트 추출(회원당 하루), 인증 메일(같은 이메일 재발송 간격·하루 횟수, 같은 IP 시간당 횟수)
+#ratelimit.ai.per-day=30
+#ratelimit.ocr.per-day=20
+#ratelimit.email.cooldown-seconds=60
+#ratelimit.email.per-day=5
+#ratelimit.email.ip-per-hour=10
+#email.verify.max-attempts=5
