@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -66,21 +67,34 @@ public class JobPostingService {
                 .map(job -> JobPostingDto.from(job, bookmarkedIds.contains(job.getPostingId())));
     }
 
-    /** 스크랩수 상위 N개 (마감 지난 공고, 스크랩 0건 제외). 홈 화면 인기 공고 위젯용. */
+    /**
+     * 홈 화면 인기 공고 위젯용 상위 N개 (마감 지난 공고 제외).
+     * 스크랩수 많은 순으로 채우고, 스크랩된 공고가 N개 미만이면 조회수 많은 순 → 마감 임박 순으로 나머지를 채운다.
+     */
     public List<JobPostingDto> getPopularJobs(int limit, Long memberId) {
-        Specification<JobPosting> spec = Specification
-            .where(JobPostingSpec.excludeExpiredUnless(null))
-            .and((root, query, cb) -> cb.greaterThan(root.get("scrapCount"), 0));
+        Specification<JobPosting> open = JobPostingSpec.excludeExpiredUnless(null);
 
-        PageRequest pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "scrapCount"));
+        List<JobPosting> jobs = new ArrayList<>(repository.findAll(
+                open.and((root, query, cb) -> cb.greaterThan(root.get("scrapCount"), 0)),
+                PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "scrapCount"))
+        ).getContent());
+
+        if (jobs.size() < limit) {
+            Set<Long> pickedIds = jobs.stream().map(JobPosting::getPostingId).collect(Collectors.toSet());
+            Sort fillSort = Sort.by(Sort.Order.desc("viewCount"), Sort.Order.asc("endDate"));
+            repository.findAll(open, PageRequest.of(0, limit + pickedIds.size(), fillSort)).stream()
+                    .filter(job -> !pickedIds.contains(job.getPostingId()))
+                    .limit(limit - jobs.size())
+                    .forEach(jobs::add);
+        }
 
         Set<Long> bookmarkedIds = (memberId != null)
                 ? bookmarkRepository.findPostingIdSetByMemberId(memberId)
                 : Collections.emptySet();
 
-        return repository.findAll(spec, pageable)
+        return jobs.stream()
                 .map(job -> JobPostingDto.from(job, bookmarkedIds.contains(job.getPostingId())))
-                .getContent();
+                .toList();
     }
 
     /** month("yyyy-MM") 기준 마감일이 그 달에 속하는 공고 전체. 마감 캘린더 뷰용. */

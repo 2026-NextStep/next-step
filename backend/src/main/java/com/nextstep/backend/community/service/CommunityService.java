@@ -13,8 +13,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -206,11 +208,23 @@ public class CommunityService {
         return commentDto;
     }
 
-    // 게시글 삭제
+    // 게시글 삭제 (작성자 본인 또는 관리자만)
     @Transactional
-    public void deletePost(Long id) {
-        Post post = postRepository.findById(id).orElseThrow();
+    public void deletePost(Long id, Long memberId) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다."));
+        checkWriterOrAdmin(post.getWriter(), memberId, "글");
         postRepository.delete(post);
+    }
+
+    // 작성자는 닉네임으로 저장되므로, 현재 회원의 닉네임과 같거나 관리자일 때만 통과
+    private void checkWriterOrAdmin(String writer, Long memberId, String target) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalStateException("회원 정보를 찾을 수 없습니다."));
+        if (Boolean.TRUE.equals(member.getIsAdmin()) || Objects.equals(writer, member.getNickname())) {
+            return;
+        }
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인이 작성한 " + target + "만 삭제할 수 있습니다.");
     }
 
     // 댓글 삭제
@@ -218,9 +232,11 @@ public class CommunityService {
     //  - 그 외(답글이 없는 댓글, 답글): 완전히 삭제한다
     //  - 마지막 답글을 지웠는데 부모가 이미 "삭제된 댓글"이면 부모도 함께 정리한다
     @Transactional
-    public void deleteComment(Long postId, Long commentId) {
-        Post post = postRepository.findById(postId).orElseThrow();
-        Comment comment = commentRepository.findById(commentId).orElseThrow();
+    public void deleteComment(Long postId, Long commentId, Long memberId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다."));
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "댓글을 찾을 수 없습니다."));
 
         if (comment.getPost() == null || !comment.getPost().getId().equals(postId)) {
             throw new IllegalArgumentException("해당 게시글의 댓글이 아닙니다.");
@@ -228,6 +244,7 @@ public class CommunityService {
         if (comment.isDeleted()) {
             return; // 이미 삭제 처리된 댓글
         }
+        checkWriterOrAdmin(comment.getWriter(), memberId, "댓글");
 
         boolean hasReplies = comment.getParentId() == null
                 && commentRepository.existsByParentId(comment.getId());

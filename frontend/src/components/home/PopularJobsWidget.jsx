@@ -1,5 +1,16 @@
 import { Link } from 'react-router-dom'
-import { Bookmark, Flame } from 'lucide-react'
+import { Bookmark, Clock, Flame } from 'lucide-react'
+
+/** "2026.11.06" → "마감 D-12" (스크랩 0건 공고에 스크랩수 대신 표시) */
+function deadlineLabel(endDate) {
+  if (!endDate) return '상시 채용'
+  const [y, m, d] = endDate.split('.').map(Number)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const diff = Math.round((new Date(y, m - 1, d) - today) / 86400000)
+  if (diff > 365) return '상시 채용' // 마감일을 2050년 등으로 둔 상시모집 공고
+  return diff === 0 ? '오늘 마감' : `마감 D-${diff}`
+}
 
 const RANK_STYLE = [
   'bg-gradient-to-br from-orange-500 to-red-600 text-white',
@@ -37,10 +48,17 @@ export default function PopularJobsWidget({ jobs }) {
               </h4>
               <p className="text-xs text-gray-500 truncate mb-0.5">{job.companyName}</p>
               <p className="text-xs text-gray-400 truncate mb-3">{job.location}</p>
-              <div className="flex items-center gap-1 text-xs font-bold text-orange-500">
-                <Bookmark size={12} className="fill-orange-500" />
-                {job.scrapCount.toLocaleString()}명이 스크랩
-              </div>
+              {job.scrapCount > 0 ? (
+                <div className="flex items-center gap-1 text-xs font-bold text-orange-500">
+                  <Bookmark size={12} className="fill-orange-500" />
+                  {job.scrapCount.toLocaleString()}명이 스크랩
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 text-xs font-semibold text-gray-400">
+                  <Clock size={12} />
+                  {deadlineLabel(job.endDate)}
+                </div>
+              )}
             </div>
           </Link>
         )
