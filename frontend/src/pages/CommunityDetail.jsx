@@ -203,15 +203,21 @@ export default function CommunityDetail() {
 
     // ── 삭제 ────────────────────────────────────────────
 
+    // 삭제는 작성자 본인만 가능 — 서버가 로그인 토큰으로 작성자를 확인한다
+    const authHeader = () => {
+        const token = getToken();
+        return token ? { Authorization: `Bearer ${token}` } : {};
+    };
+
     const handleDeletePost = async () => {
         if (!window.confirm("게시글을 삭제하시겠습니까?")) return;
         try {
             const res = await fetch(
                 `http://localhost:8080/api/v1/community/post/${id}`,
-                { method: "DELETE", credentials: "include" }
+                { method: "DELETE", credentials: "include", headers: authHeader() }
             );
             if (res.ok) { alert("삭제되었습니다."); navigate("/community"); }
-            else alert("삭제에 실패했습니다.");
+            else alert((await res.json().catch(() => null))?.message || "삭제에 실패했습니다.");
         } catch (e) { console.error("게시글 삭제 실패", e); }
     };
 
@@ -246,10 +252,10 @@ export default function CommunityDetail() {
         try {
             const res = await fetch(
                 `http://localhost:8080/api/v1/community/post/${id}/comment/${commentId}`,
-                { method: "DELETE", credentials: "include" }
+                { method: "DELETE", credentials: "include", headers: authHeader() }
             );
             if (res.ok) removeCommentLocally(commentId);
-            else alert("댓글 삭제에 실패했습니다.");
+            else alert((await res.json().catch(() => null))?.message || "댓글 삭제에 실패했습니다.");
         } catch (e) { console.error("댓글 삭제 실패", e); }
     };
 

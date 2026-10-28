@@ -64,19 +64,21 @@ public class CommunityController {
     }
 
     // ← 추가: 게시글 삭제
+    // 작성자 본인 또는 관리자만 가능 (비로그인 시 403)
     @DeleteMapping("/post/{id}")
     public ResponseEntity<Void> deletePost(@PathVariable Long id) {
-        communityService.deletePost(id);
+        communityService.deletePost(id, securityUtil.getCurrentMemberId());
         return ResponseEntity.ok().build();
     }
 
     // ← 추가: 댓글 삭제
+    // 작성자 본인 또는 관리자만 가능 (비로그인 시 403)
     @DeleteMapping("/post/{postId}/comment/{commentId}")
     public ResponseEntity<Void> deleteComment(
             @PathVariable Long postId,
             @PathVariable Long commentId
     ) {
-        communityService.deleteComment(postId, commentId);
+        communityService.deleteComment(postId, commentId, securityUtil.getCurrentMemberId());
         return ResponseEntity.ok().build();
     }
 
