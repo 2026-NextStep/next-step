@@ -8,10 +8,11 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 @RequiredArgsConstructor
@@ -23,11 +24,18 @@ public class EmailService {
     private String fromEmail;
 
     private final Map<String, VerificationInfo> codeStore = new ConcurrentHashMap<>();
+    private final SecureRandom random = new SecureRandom();
+
+    // 인증코드를 이 횟수만큼 틀리면 코드를 무효화한다 (6자리 코드 무차별 대입 방지)
+    @Value("${email.verify.max-attempts:5}")
+    private int maxAttempts;
+
+    public enum VerifyResult { VERIFIED, WRONG_CODE, EXPIRED, LOCKED }
 
     public void sendVerificationCode(String email) {
-        String code   = String.format("%06d", new Random().nextInt(1_000_000));
+        String code   = String.format("%06d", random.nextInt(1_000_000));
         LocalDateTime expiry = LocalDateTime.now().plusMinutes(5);
-        codeStore.put(email, new VerificationInfo(code, expiry));
+        codeStore.put(email, new VerificationInfo(code, expiry, new AtomicInteger()));
 
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(fromEmail);
@@ -52,17 +60,23 @@ public class EmailService {
         mailSender.send(message);
     }
 
-    public boolean verifyCode(String email, String code) {
+    public VerifyResult verifyCode(String email, String code) {
         VerificationInfo info = codeStore.get(email);
-        if (info == null) return false;
+        if (info == null) return VerifyResult.EXPIRED;
         if (LocalDateTime.now().isAfter(info.expiry())) {
             codeStore.remove(email);
-            return false;
+            return VerifyResult.EXPIRED;
         }
-        if (!info.code().equals(code)) return false;
+        if (!info.code().equals(code)) {
+            if (info.failCount().incrementAndGet() >= maxAttempts) {
+                codeStore.remove(email);
+                return VerifyResult.LOCKED;
+            }
+            return VerifyResult.WRONG_CODE;
+        }
         codeStore.remove(email);
-        return true;
+        return VerifyResult.VERIFIED;
     }
 
-    private record VerificationInfo(String code, LocalDateTime expiry) {}
+    private record VerificationInfo(String code, LocalDateTime expiry, AtomicInteger failCount) {}
 }

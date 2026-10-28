@@ -60,8 +60,9 @@ export default function SignUp() {
             setCodeSent(true);
             setEmailMessage("인증코드가 발송되었습니다. 이메일을 확인해주세요.");
             setEmailMessageType("success");
-        } catch {
-            setEmailMessage("서버 연결에 실패했습니다.");
+        } catch (error) {
+            // 발송 횟수 제한(429) 등 서버가 알려준 이유를 그대로 보여준다
+            setEmailMessage(error.response?.data?.message || "서버 연결에 실패했습니다.");
             setEmailMessageType("error");
         } finally {
             setSendingCode(false);
@@ -83,8 +84,9 @@ export default function SignUp() {
                 setEmailMessage(data.message || "인증코드가 올바르지 않습니다.");
                 setEmailMessageType("error");
             }
-        } catch {
-            setEmailMessage("서버 연결에 실패했습니다.");
+        } catch (error) {
+            // 코드가 틀리면 서버가 400과 함께 이유를 보내므로 그 메시지를 보여준다
+            setEmailMessage(error.response?.data?.message || "서버 연결에 실패했습니다.");
             setEmailMessageType("error");
         } finally {
             setVerifyingCode(false);

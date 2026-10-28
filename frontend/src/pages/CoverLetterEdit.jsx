@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import axiosInstance from "../api/axiosInstance";
 import "./CoverLetterEdit.css";
 
 const API = "http://localhost:8080/api/v1";
@@ -382,8 +383,9 @@ export default function CoverLetterEdit() {
             setFeedback(null);
             setErrorMsg("");
 
-            const response = await axios.post(
-                `${API}/ai/cover-letter/revise`,
+            // AI 첨삭은 로그인 필수 — axiosInstance가 로그인 토큰을 자동으로 붙인다
+            const response = await axiosInstance.post(
+                "/ai/cover-letter/revise",
                 {
                     questions: questions.map((q) => ({
                         questionNumber: q.questionNumber,
@@ -469,8 +471,9 @@ export default function CoverLetterEdit() {
         try {
             const formData = new FormData();
             formData.append("file", file);
-            const response = await axios.post(
-                `${API}/ocr/extract`,
+            // OCR도 로그인 필수 — axiosInstance가 로그인 토큰을 자동으로 붙인다
+            const response = await axiosInstance.post(
+                "/ocr/extract",
                 formData,
                 { headers: { "Content-Type": "multipart/form-data" } }
             );
@@ -483,7 +486,7 @@ export default function CoverLetterEdit() {
             setPdfFile(file);
             setRefText(text);
         } catch (error) {
-            const msg = error.response?.data?.error || "텍스트 추출에 실패했습니다.";
+            const msg = error.response?.data?.error || error.response?.data?.message || "텍스트 추출에 실패했습니다.";
             alert(msg);
             e.target.value = "";
         } finally {
