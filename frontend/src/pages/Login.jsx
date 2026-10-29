@@ -66,11 +66,14 @@ export default function NextStepLogin() {
     };
 
     // 카카오 로그인
+    // 돌아올 주소는 현재 접속한 주소 기준으로 만든다 (로컬: localhost:5173, 배포: 서버 주소).
+    // 백엔드 kakao.redirect-uri 설정값, 카카오 콘솔에 등록한 Redirect URI와 정확히 같아야 한다.
     const kakaoLogin = () => {
+        const redirectUri = `${window.location.origin}/oauth/kakao/callback`;
         window.location.href =
             "https://kauth.kakao.com/oauth/authorize" +
             "?client_id=f3880ae7a2f0e2cd93cf2896e5270a41" +
-            "&redirect_uri=http://localhost:5173/oauth/kakao/callback" +
+            `&redirect_uri=${encodeURIComponent(redirectUri)}` +
             "&response_type=code";
     };
 
