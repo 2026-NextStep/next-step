@@ -1,5 +1,5 @@
 """
-JSON 응답 생성 공용 헬퍼: Gemini 우선, 실패 시 OpenAI(gpt-4o-mini)로 폴백.
+JSON 응답 생성 공용 헬퍼: Gemini 우선, 실패 시 OpenAI(gpt-4o-mini)로 폴백 (LLM_PRIMARY=openai면 반대 순서).
 
 Gemini 무료 티어는 모델당 하루 20회라 금방 소진되므로,
 RESOURCE_EXHAUSTED를 한 번 받으면 그날은 Gemini를 건너뛰고 바로 OpenAI를 사용한다.
@@ -51,6 +51,15 @@ def _openai_json(prompt: str, system: str, temperature: float) -> dict:
 
 
 def generate_json(prompt: str, system: str, temperature: float = 0.4) -> dict:
+    # LLM_PRIMARY=openai 이면 OpenAI를 먼저 쓰고 실패 시 Gemini로 넘어간다.
+    # (배포 서버에서는 Gemini 무료 한도를 자소서 AI Agent용으로 남겨 두기 위해 openai로 설정)
+    if settings.llm_primary == "openai":
+        try:
+            return _openai_json(prompt, system, temperature)
+        except Exception as e:
+            logger.warning(f"OpenAI 호출 실패 → Gemini 폴백: {e}")
+            return _gemini_json(prompt, system, temperature)
+
     global _gemini_exhausted_on
     if _gemini_exhausted_on != date.today():
         try:
