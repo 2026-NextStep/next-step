@@ -58,8 +58,13 @@ export default function NextStepLogin() {
                 setLoginError(data.message);
             }
 
-        } catch {
-            setLoginError("서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.");
+        } catch (error) {
+            // 서버가 응답했다면(예: 400 아이디·비밀번호 불일치) 그 이유를 보여주고,
+            // 응답 자체가 없을 때만 연결 실패로 안내한다
+            setLoginError(
+                error.response?.data?.message ||
+                (error.response ? "로그인에 실패했습니다." : "서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.")
+            );
         } finally {
             setLoading(false);
         }

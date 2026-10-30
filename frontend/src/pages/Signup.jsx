@@ -154,8 +154,13 @@ export default function SignUp() {
 
             alert("회원가입이 완료되었습니다!");
             window.location.href = "/login";
-        } catch {
-            setSignupError("서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.");
+        } catch (error) {
+            // 서버가 응답했다면(예: 400 이미 사용 중인 이메일·아이디·닉네임) 그 이유를 보여주고,
+            // 응답 자체가 없을 때만 연결 실패로 안내한다
+            setSignupError(
+                error.response?.data?.message ||
+                (error.response ? "회원가입에 실패했습니다." : "서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.")
+            );
         } finally {
             setLoading(false);
         }
