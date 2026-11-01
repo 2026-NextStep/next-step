@@ -69,6 +69,8 @@ def _get_db_connection():
         password=settings.db_password,
         database=settings.db_name,
         charset="utf8mb4",
+        # RDS 기본 시간대(UTC) 대신 한국 시간으로 created_at/updated_at 저장
+        init_command="SET time_zone = '+09:00'",
     )
 
 
