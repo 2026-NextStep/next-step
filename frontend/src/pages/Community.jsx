@@ -222,7 +222,7 @@ export default function Community() {
                                         {bookmarks.has(post.id) ? "⭐" : "☆"}
                                     </td>
                                     <td>
-                                        <span className={`com-badge com-badge-${post.category}`}>
+                                        <span className={`com-badge com-badge-${(post.category || "").replace(/\s+/g, "-")}`}>
                                             {post.category}
                                         </span>
                                     </td>

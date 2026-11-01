@@ -385,12 +385,13 @@
     color: #0369a1;
 }
 
-.com-badge-기업\ 질문 {
+/* 클래스명에 공백을 쓸 수 없어 "기업 질문" → "기업-질문"으로 변환해 사용 (Community.jsx) */
+.com-badge-기업-질문 {
     background: #ede9fe;
     color: #6d28d9;
 }
 
-.com-badge-자유\ 게시판 {
+.com-badge-자유-게시판 {
     background: #fce7f3;
     color: #9d174d;
 }
