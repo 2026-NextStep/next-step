@@ -91,6 +91,8 @@ def get_db_connection():
         database=settings.db_name,
         charset="utf8mb4",
         cursorclass=pymysql.cursors.DictCursor,
+        # RDS 기본 시간대가 UTC라 NOW()가 9시간 늦게 저장됨 → 세션을 한국 시간으로 맞춤
+        init_command="SET time_zone = '+09:00'",
     )
 
 
