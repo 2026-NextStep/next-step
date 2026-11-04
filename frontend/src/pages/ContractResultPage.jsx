@@ -267,6 +267,11 @@ export default function ContractResultPage() {
   const handlePdfGuideConfirm = () => {
     setShowPdfGuideModal(false)
     setTimeout(() => {
+      // "PDF로 저장"의 기본 파일명은 document.title을 따르므로 인쇄하는 동안만 바꾼다
+      const originalTitle = document.title
+      const baseName = (data?.fileName ?? '근로계약서').replace(/\.(pdf|jpe?g|png)$/i, '')
+      document.title = `${baseName}_분석`
+      window.addEventListener('afterprint', () => { document.title = originalTitle }, { once: true })
       window.print()
       setHasPdfSaved(true)
     }, 100)
