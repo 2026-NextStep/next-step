@@ -1,6 +1,7 @@
 import json
 import logging
 import math
+import re
 from datetime import date, timedelta
 
 import pymysql
@@ -92,6 +93,14 @@ def _status(end_ymd) -> str:
     return "접수중"
 
 
+# ALIO 원문에서 글머리 기호(①, ○ 등)가 깨져 줄 맨 앞에 "?"로 들어오는 경우가 있어 "·"로 바꿈
+_BROKEN_BULLET = re.compile(r"^(\s*)\?(?=\s)", re.MULTILINE)
+
+
+def _clean_text(text: str) -> str:
+    return _BROKEN_BULLET.sub(r"\1·", text)
+
+
 def _fetch_page(page_no: int) -> dict:
     r = requests.post(
         FETCH_URL,
@@ -125,7 +134,7 @@ def _row_detail(item: dict) -> tuple:
         ("우대사항", item.get("prefCn") or ""),
         ("전형방법", item.get("scrnprcdrMthdExpln") or ""),
     ]
-    qual_items = [{"type": k, "content": v} for k, v in qual_fields if v]
+    qual_items = [{"type": k, "content": _clean_text(v)} for k, v in qual_fields if v]
 
     positions = {
         "ncs_fields": (item.get("ncsCdNmLst") or "").split(",") if item.get("ncsCdNmLst") else [],
